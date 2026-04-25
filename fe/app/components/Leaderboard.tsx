@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 import { formatUnits } from "viem";
 
 const MOCK_LEADERBOARD = [
-  { rank: 1, address: "0x8B35...4478", yield: 2450000000n, winRate: 78 },
-  { rank: 2, address: "0x1A2B...9C8D", yield: 1820000000n, winRate: 65 },
-  { rank: 3, address: "0x5C6D...3E4F", yield: 1540000000n, winRate: 60 },
-  { rank: 4, address: "0x7E8F...1A2B", yield: 980000000n, winRate: 54 },
-  { rank: 5, address: "0x9G0H...5C6D", yield: 720000000n, winRate: 51 },
+  { rank: 1, address: "0x8B35...4478", yield: BigInt(2450000000), winRate: 78 },
+  { rank: 2, address: "0x1A2B...9C8D", yield: BigInt(1820000000), winRate: 65 },
+  { rank: 3, address: "0x5C6D...3E4F", yield: BigInt(1540000000), winRate: 60 },
+  { rank: 4, address: "0x7E8F...1A2B", yield: BigInt(980000000), winRate: 54 },
+  { rank: 5, address: "0x9G0H...5C6D", yield: BigInt(720000000), winRate: 51 },
 ];
 
 export default function Leaderboard() {
