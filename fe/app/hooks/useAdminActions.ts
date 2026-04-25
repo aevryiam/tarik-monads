@@ -4,10 +4,11 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseEther } from "viem";
 import { ADDRESSES } from "@/app/config/addresses";
+import { MONAD_TESTNET_CHAIN_ID } from "@/app/config/constants";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 import { ASSET_SYMBOL } from "@/app/config/constants";
 import { parseContractError } from "@/app/lib/errors";
@@ -41,6 +42,16 @@ interface UseAdminActionsResult {
 
 export function useAdminActions(): UseAdminActionsResult {
   const queryClient = useQueryClient();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+
+  const ensureMonadChain = useCallback(() => {
+    if (chainId === MONAD_TESTNET_CHAIN_ID) return true;
+
+    toastError("Wallet masih di jaringan lain. Pindahkan ke Monad Testnet dulu.");
+    switchChain?.({ chainId: MONAD_TESTNET_CHAIN_ID });
+    return false;
+  }, [chainId, switchChain]);
 
   // Create War
   const { writeContract: writeCreate, data: createTxHash, isPending: isCreating } =
@@ -81,6 +92,8 @@ export function useAdminActions(): UseAdminActionsResult {
       endTime: bigint,
       mockYieldBps: bigint
     ) => {
+      if (!ensureMonadChain()) return;
+
       if (!nameA.trim() || !nameB.trim()) {
         toastError("Nama Side A dan Side B tidak boleh kosong.");
         return;
@@ -99,11 +112,13 @@ export function useAdminActions(): UseAdminActionsResult {
         }
       );
     },
-    [writeCreate]
+    [ensureMonadChain, writeCreate]
   );
 
   const resolve = useCallback(
     (warId: number, winningSide: 1 | 2) => {
+      if (!ensureMonadChain()) return;
+
       const toastId = toastPending(`Menyelesaikan War #${warId}…`);
       writeResolve(
         {
@@ -118,11 +133,13 @@ export function useAdminActions(): UseAdminActionsResult {
         }
       );
     },
-    [writeResolve]
+    [ensureMonadChain, writeResolve]
   );
 
   const cancelWar = useCallback(
     (warId: number) => {
+      if (!ensureMonadChain()) return;
+
       const toastId = toastPending(`Membatalkan War #${warId}…`);
       writeCancel(
         {
@@ -141,11 +158,13 @@ export function useAdminActions(): UseAdminActionsResult {
         }
       );
     },
-    [writeCancel, queryClient]
+    [ensureMonadChain, writeCancel, queryClient]
   );
 
   const fundYieldReserve = useCallback(
     (amountStr: string) => {
+      if (!ensureMonadChain()) return;
+
       let amount: bigint;
       try {
         amount = parseEther(amountStr);
@@ -172,7 +191,7 @@ export function useAdminActions(): UseAdminActionsResult {
         }
       );
     },
-    [writeFund, queryClient]
+    [ensureMonadChain, writeFund, queryClient]
   );
 
   return {
