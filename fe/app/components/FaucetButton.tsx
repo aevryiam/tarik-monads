@@ -14,7 +14,7 @@ export default function FaucetButton() {
       address: ADDRESSES.mockUSDC,
       abi: MOCK_USDC_ABI,
       functionName: "faucet",
-      gas: 3000000n,
+      gas: BigInt(3000000),
     });
   };
 
