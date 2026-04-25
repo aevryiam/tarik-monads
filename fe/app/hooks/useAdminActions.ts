@@ -4,7 +4,12 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { useWriteContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from "wagmi";
+import {
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  useChainId,
+  useSwitchChain,
+} from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseEther } from "viem";
 import { ADDRESSES } from "@/app/config/addresses";
@@ -12,7 +17,12 @@ import { MONAD_TESTNET_CHAIN_ID } from "@/app/config/constants";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 import { ASSET_SYMBOL } from "@/app/config/constants";
 import { parseContractError } from "@/app/lib/errors";
-import { toastSuccess, toastError, toastPending, toastDismiss } from "@/app/lib/toast";
+import {
+  toastSuccess,
+  toastError,
+  toastPending,
+  toastDismiss,
+} from "@/app/lib/toast";
 
 interface UseAdminActionsResult {
   /** Buat war baru */
@@ -21,7 +31,7 @@ interface UseAdminActionsResult {
     nameB: string,
     startTime: bigint,
     endTime: bigint,
-    mockYieldBps: bigint
+    mockYieldBps: bigint,
   ) => void;
   /** Resolve war dengan menentukan pemenang */
   resolve: (warId: number, winningSide: 1 | 2) => void;
@@ -48,23 +58,36 @@ export function useAdminActions(): UseAdminActionsResult {
   const ensureMonadChain = useCallback(() => {
     if (chainId === MONAD_TESTNET_CHAIN_ID) return true;
 
-    toastError("Wallet masih di jaringan lain. Pindahkan ke Monad Testnet dulu.");
+    toastError(
+      "Wallet masih di jaringan lain. Pindahkan ke Monad Testnet dulu.",
+    );
     switchChain?.({ chainId: MONAD_TESTNET_CHAIN_ID });
     return false;
   }, [chainId, switchChain]);
 
   // Create War
-  const { writeContract: writeCreate, data: createTxHash, isPending: isCreating } =
-    useWriteContract();
-  const { isSuccess: createSuccess } = useWaitForTransactionReceipt({ hash: createTxHash });
+  const {
+    writeContract: writeCreate,
+    data: createTxHash,
+    isPending: isCreating,
+  } = useWriteContract();
+  const { isSuccess: createSuccess } = useWaitForTransactionReceipt({
+    hash: createTxHash,
+  });
 
   // Resolve
-  const { writeContract: writeResolve, data: resolveTxHash, isPending: isResolving } =
-    useWriteContract();
-  const { isSuccess: resolveSuccess } = useWaitForTransactionReceipt({ hash: resolveTxHash });
+  const {
+    writeContract: writeResolve,
+    data: resolveTxHash,
+    isPending: isResolving,
+  } = useWriteContract();
+  const { isSuccess: resolveSuccess } = useWaitForTransactionReceipt({
+    hash: resolveTxHash,
+  });
 
   // Cancel
-  const { writeContract: writeCancel, isPending: isCancelling } = useWriteContract();
+  const { writeContract: writeCancel, isPending: isCancelling } =
+    useWriteContract();
 
   // Fund Yield Reserve
   const { writeContract: writeFund, isPending: isFunding } = useWriteContract();
@@ -90,7 +113,7 @@ export function useAdminActions(): UseAdminActionsResult {
       nameB: string,
       startTime: bigint,
       endTime: bigint,
-      mockYieldBps: bigint
+      mockYieldBps: bigint,
     ) => {
       if (!ensureMonadChain()) return;
 
@@ -107,12 +130,15 @@ export function useAdminActions(): UseAdminActionsResult {
           args: [nameA, nameB, startTime, endTime, mockYieldBps],
         },
         {
-          onError: (err) => { toastDismiss(toastId); toastError(parseContractError(err)); },
+          onError: (err) => {
+            toastDismiss(toastId);
+            toastError(parseContractError(err));
+          },
           onSuccess: () => toastDismiss(toastId),
-        }
+        },
       );
     },
-    [ensureMonadChain, writeCreate]
+    [ensureMonadChain, writeCreate],
   );
 
   const resolve = useCallback(
@@ -128,12 +154,15 @@ export function useAdminActions(): UseAdminActionsResult {
           args: [BigInt(warId), winningSide],
         },
         {
-          onError: (err) => { toastDismiss(toastId); toastError(parseContractError(err)); },
+          onError: (err) => {
+            toastDismiss(toastId);
+            toastError(parseContractError(err));
+          },
           onSuccess: () => toastDismiss(toastId),
-        }
+        },
       );
     },
-    [ensureMonadChain, writeResolve]
+    [ensureMonadChain, writeResolve],
   );
 
   const cancelWar = useCallback(
@@ -149,16 +178,19 @@ export function useAdminActions(): UseAdminActionsResult {
           args: [BigInt(warId)],
         },
         {
-          onError: (err) => { toastDismiss(toastId); toastError(parseContractError(err)); },
+          onError: (err) => {
+            toastDismiss(toastId);
+            toastError(parseContractError(err));
+          },
           onSuccess: (hash) => {
             toastDismiss(toastId);
             toastSuccess(`War #${warId} dibatalkan.`, hash);
             queryClient.invalidateQueries();
           },
-        }
+        },
       );
     },
-    [ensureMonadChain, writeCancel, queryClient]
+    [ensureMonadChain, writeCancel, queryClient],
   );
 
   const fundYieldReserve = useCallback(
@@ -182,16 +214,22 @@ export function useAdminActions(): UseAdminActionsResult {
           value: amount,
         },
         {
-          onError: (err) => { toastDismiss(toastId); toastError(parseContractError(err)); },
+          onError: (err) => {
+            toastDismiss(toastId);
+            toastError(parseContractError(err));
+          },
           onSuccess: (hash) => {
             toastDismiss(toastId);
-            toastSuccess(`Yield reserve ${ASSET_SYMBOL} berhasil didepositkan.`, hash);
+            toastSuccess(
+              `Yield reserve ${ASSET_SYMBOL} berhasil didepositkan.`,
+              hash,
+            );
             queryClient.invalidateQueries();
           },
-        }
+        },
       );
     },
-    [ensureMonadChain, writeFund, queryClient]
+    [ensureMonadChain, writeFund, queryClient],
   );
 
   return {
