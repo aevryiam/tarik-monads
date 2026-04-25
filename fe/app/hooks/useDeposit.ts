@@ -3,7 +3,7 @@
 // ============================================================================
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseEther } from "viem";
@@ -11,7 +11,12 @@ import { ADDRESSES } from "@/app/config/addresses";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 import { ASSET_SYMBOL } from "@/app/config/constants";
 import { parseContractError } from "@/app/lib/errors";
-import { toastSuccess, toastError, toastPending, toastDismiss } from "@/app/lib/toast";
+import {
+  toastSuccess,
+  toastError,
+  toastPending,
+  toastDismiss,
+} from "@/app/lib/toast";
 
 interface UseDepositResult {
   /**
@@ -36,23 +41,6 @@ export function useDeposit(warId: number): UseDepositResult {
 
   const { isLoading: depositConfirming, isSuccess: depositSuccess } =
     useWaitForTransactionReceipt({ hash: depositTxHash });
-
-  // State internal: simpan args untuk deposit setelah approve selesai
-  const pendingDepositArgs = useRef<{ side: 1 | 2; amount: bigint } | null>(null);
-
-  // Ketika approve sukses → lanjut deposit otomatis
-  useEffect(() => {
-    if (approveSuccess && pendingDepositArgs.current) {
-      const { side, amount } = pendingDepositArgs.current;
-      pendingDepositArgs.current = null;
-      writeDeposit({
-        address: ADDRESSES.tarikVault,
-        abi: TARIK_VAULT_ABI,
-        functionName: "deposit",
-        args: [BigInt(warId), side, amount],
-      });
-    }
-  }, [approveSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ketika deposit sukses → toast + invalidate queries
   useEffect(() => {
@@ -92,10 +80,10 @@ export function useDeposit(warId: number): UseDepositResult {
             toastError(parseContractError(err));
           },
           onSuccess: () => toastDismiss(toastId),
-        }
+        },
       );
     },
-    [warId, writeDeposit]
+    [warId, writeDeposit],
   );
 
   return {
