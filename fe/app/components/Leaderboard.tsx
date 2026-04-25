@@ -1,19 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatUnits } from "viem";
+import { parseEther } from "viem";
+import { ASSET_SYMBOL } from "@/app/config/constants";
+import { formatMON } from "@/app/lib/formatters";
 
 const MOCK_LEADERBOARD = [
-  { rank: 1, address: "0x8B35...4478", yield: BigInt(2450000000), winRate: 78 },
-  { rank: 2, address: "0x1A2B...9C8D", yield: BigInt(1820000000), winRate: 65 },
-  { rank: 3, address: "0x5C6D...3E4F", yield: BigInt(1540000000), winRate: 60 },
-  { rank: 4, address: "0x7E8F...1A2B", yield: BigInt(980000000), winRate: 54 },
-  { rank: 5, address: "0x9G0H...5C6D", yield: BigInt(720000000), winRate: 51 },
+  { rank: 1, address: "0x8B35...4478", yield: parseEther("2450"), winRate: 78 },
+  { rank: 2, address: "0x1A2B...9C8D", yield: parseEther("1820"), winRate: 65 },
+  { rank: 3, address: "0x5C6D...3E4F", yield: parseEther("1540"), winRate: 60 },
+  { rank: 4, address: "0x7E8F...1A2B", yield: parseEther("980"), winRate: 54 },
+  { rank: 5, address: "0x9G0H...5C6D", yield: parseEther("720"), winRate: 51 },
 ];
 
 export default function Leaderboard() {
-  const formatUSDC = (val: bigint) => (Number(val) / 1e6).toLocaleString(undefined, { minimumFractionDigits: 2 });
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -76,7 +76,7 @@ export default function Leaderboard() {
               {player.winRate}%
             </div>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "1.1rem", color: "var(--gold)", fontWeight: 700, textAlign: "right" }}>
-              +${formatUSDC(player.yield)}
+              +{formatMON(player.yield)} {ASSET_SYMBOL}
             </div>
           </motion.div>
         ))}

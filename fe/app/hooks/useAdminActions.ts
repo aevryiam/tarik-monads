@@ -6,10 +6,10 @@
 import { useCallback, useEffect } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
-import { parseUnits } from "viem";
+import { parseEther } from "viem";
 import { ADDRESSES } from "@/app/config/addresses";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
-import { USDC_DECIMALS } from "@/app/config/constants";
+import { ASSET_SYMBOL } from "@/app/config/constants";
 import { parseContractError } from "@/app/lib/errors";
 import { toastSuccess, toastError, toastPending, toastDismiss } from "@/app/lib/toast";
 
@@ -148,7 +148,7 @@ export function useAdminActions(): UseAdminActionsResult {
     (amountStr: string) => {
       let amount: bigint;
       try {
-        amount = parseUnits(amountStr, USDC_DECIMALS);
+        amount = parseEther(amountStr);
       } catch {
         toastError("Format jumlah tidak valid.");
         return;
@@ -160,12 +160,13 @@ export function useAdminActions(): UseAdminActionsResult {
           abi: TARIK_VAULT_ABI,
           functionName: "fundYieldReserve",
           args: [amount],
+          value: amount,
         },
         {
           onError: (err) => { toastDismiss(toastId); toastError(parseContractError(err)); },
           onSuccess: (hash) => {
             toastDismiss(toastId);
-            toastSuccess(`Yield reserve berhasil didepositkan.`, hash);
+            toastSuccess(`Yield reserve ${ASSET_SYMBOL} berhasil didepositkan.`, hash);
             queryClient.invalidateQueries();
           },
         }

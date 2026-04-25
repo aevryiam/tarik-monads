@@ -6,10 +6,7 @@ export const TARIK_VAULT_ABI = [
   // --- Constructor ---
   {
     type: "constructor",
-    inputs: [
-      { name: "_stakingToken", type: "address" },
-      { name: "_owner", type: "address" },
-    ],
+    inputs: [{ name: "_owner", type: "address" }],
     stateMutability: "nonpayable",
   },
 
@@ -49,7 +46,7 @@ export const TARIK_VAULT_ABI = [
     name: "fundYieldReserve",
     inputs: [{ name: "amount", type: "uint256" }],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
   },
   {
     type: "function",
@@ -69,7 +66,7 @@ export const TARIK_VAULT_ABI = [
       { name: "amount", type: "uint256" },
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
   },
   {
     type: "function",
@@ -97,13 +94,6 @@ export const TARIK_VAULT_ABI = [
   {
     type: "function",
     name: "owner",
-    inputs: [],
-    outputs: [{ name: "", type: "address" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "stakingToken",
     inputs: [],
     outputs: [{ name: "", type: "address" }],
     stateMutability: "view",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame } from "lucide-react";
@@ -9,11 +9,11 @@ import TugOfWarArena from "@/app/components/TugOfWarArena";
 import ActionPanel from "@/app/components/ActionPanel";
 import WarInfo from "@/app/components/WarInfo";
 import VictoryCrate from "@/app/components/VictoryCrate";
-import FaucetButton from "@/app/components/FaucetButton";
 import AdminPanel from "@/app/components/AdminPanel";
 import CampaignCard from "@/app/components/CampaignCard";
 import Leaderboard from "@/app/components/Leaderboard";
-import { ADDRESSES, TARIK_VAULT_ABI, VICTORY_CRATE_ABI } from "@/app/config/contracts";
+import { ADDRESSES } from "@/app/config/addresses";
+import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 import { MOCK_CAMPAIGNS, type MockCampaign } from "@/app/config/mockData";
 import { useWar } from "@/app/hooks/useWar";
 import { useWarList } from "@/app/hooks/useWarList";
@@ -22,27 +22,22 @@ import { useVictoryCrate } from "@/app/hooks/useVictoryCrate";
 
 type ViewMode = "grid" | "arena" | "lootboxes" | "leaderboard" | "admin";
 
+const MON_UNIT = BigInt(10) ** BigInt(18);
+const toMONWei = (value: number) => BigInt(Math.round(value * 1_000_000)) * (BigInt(10) ** BigInt(12));
+
 export default function Home() {
-  const { address } = useAccount();
   const [view, setView] = useState<ViewMode>("grid");
-  const [activeWarId, setActiveWarId] = useState<number>(0);
+  const [activeWarId, setActiveWarId] = useState<number | null>(null);
   const [selectedMock, setSelectedMock] = useState<MockCampaign | null>(null);
   const [showSplash, setShowSplash] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
 
   // Custom hooks — replace 8 inline useReadContract calls
   const { warCount, activeWars } = useWarList();
-  const { war, tugPosition, isOpen } = useWar(activeWarId);
-  const { deposit: userDeposit, isWinner } = useUserDeposit(activeWarId);
-  const { hasCrate, isOpened: crateOpened, yieldAmount: crateYield } = useVictoryCrate(activeWarId);
-
-  const currentWarId = warCount > 0 ? BigInt(warCount) : undefined;
-
-  useEffect(() => {
-    if (warCount > 0) {
-      setActiveWarId(warCount - 1);
-    }
-  }, [warCount]);
+  const selectedWarId = activeWarId ?? (warCount > 0 ? warCount - 1 : 0);
+  const { war, tugPosition, isOpen } = useWar(selectedWarId);
+  const { isWinner } = useUserDeposit(selectedWarId);
+  const { hasCrate, isOpened: crateOpened, yieldAmount: crateYield } = useVictoryCrate(selectedWarId);
 
   // Dismiss splash
   useEffect(() => {
@@ -145,7 +140,7 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Category tabs + Faucet */}
+            {/* Category tabs */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               marginBottom: 20, flexWrap: "wrap", gap: 8,
@@ -168,7 +163,6 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <FaucetButton />
             </div>
 
             {/* On-chain wars (if any) */}
@@ -181,7 +175,7 @@ export default function Home() {
                   display: "flex", alignItems: "center", gap: 6,
                 }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4caf50", display: "inline-block" }} />
-                  LIVE ON-CHAIN
+                  ON-CHAIN CAMPAIGNS
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 16 }}>
                   {activeWars.map((w) => (
@@ -254,14 +248,14 @@ export default function Home() {
                 <TugOfWarArena
                   nameA={selectedMock.nameA}
                   nameB={selectedMock.nameB}
-                  tvlA={BigInt(selectedMock.tvlA * 1e6)}
-                  tvlB={BigInt(selectedMock.tvlB * 1e6)}
+                  tvlA={toMONWei(selectedMock.tvlA)}
+                  tvlB={toMONWei(selectedMock.tvlB)}
                   pctA={selectedMock.pctA * 100}
                   pctB={(100 - selectedMock.pctA) * 100}
                   status={0}
                   winningSide={0}
                   yieldBps={selectedMock.yieldBps}
-                  totalDeposits={BigInt((selectedMock.tvlA + selectedMock.tvlB) * 1e6)}
+                  totalDeposits={toMONWei(selectedMock.tvlA + selectedMock.tvlB)}
                 />
                 <div style={{
                   padding: 24, background: "var(--bg-card)",
@@ -296,7 +290,7 @@ export default function Home() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                   <WarInfo
-                    warId={activeWarId}
+                    warId={selectedWarId}
                     nameA={war.nameA}
                     nameB={war.nameB}
                     startTime={Number(war.startTime)}
@@ -308,7 +302,7 @@ export default function Home() {
                     totalYield={war.totalYield}
                   />
                   <ActionPanel
-                    warId={activeWarId}
+                    warId={selectedWarId}
                     nameA={war.nameA}
                     nameB={war.nameB}
                     isOpen={!!isOpen}
@@ -347,14 +341,14 @@ export default function Home() {
                 YOUR LOOTBOXES
               </h2>
               <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>
-                Unseal the crates you've won to claim your yield.
+                Unseal the crates you have won to claim your yield.
               </p>
             </div>
 
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 32 }}>
               {/* Show actual un-opened crates if any */}
               {warCount > 0 && Array.from({ length: warCount }).map((_, i) => {
-                if (i === activeWarId && hasCrate && !crateOpened) {
+                if (i === selectedWarId && hasCrate && !crateOpened) {
                    return (
                      <div key={i} style={{ width: 300 }}>
                         <VictoryCrate
@@ -376,7 +370,7 @@ export default function Home() {
                     Demo Crate (Try it!)
                   </div>
                   <VictoryCrate
-                    yieldAmount={BigInt(25000000)} // $25.00
+                    yieldAmount={BigInt(25) * MON_UNIT}
                     isOpened={false}
                     onOpen={() => {}}
                     isOpening={false}
@@ -434,6 +428,8 @@ export default function Home() {
 
 // Mini component to render on-chain war as a card
 function OnChainWarCard({ warId, onClick, featured }: { warId: number; onClick: () => void; featured?: boolean }) {
+  const [nowSec, setNowSec] = useState(0);
+
   const { data: war } = useReadContract({
     address: ADDRESSES.tarikVault,
     abi: TARIK_VAULT_ABI,
@@ -450,12 +446,19 @@ function OnChainWarCard({ warId, onClick, featured }: { warId: number; onClick: 
     query: { enabled: !!war, refetchInterval: 6000 },
   });
 
+  useEffect(() => {
+    const update = () => setNowSec(Math.floor(Date.now() / 1000));
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (!war) return null;
 
   const pctA = tug ? Number(tug[0]) / 100 : 50;
   const status = Number(war.status);
+  const hasEnded = status === 0 && nowSec > 0 && Number(war.endTime) <= nowSec;
   const statusLabels = ["LIVE", "RESOLVED", "CANCELLED"];
-  const statusColors = ["#4caf50", "var(--gold)", "#ff5252"];
 
   return (
     <CampaignCard
@@ -463,15 +466,15 @@ function OnChainWarCard({ warId, onClick, featured }: { warId: number; onClick: 
       nameA={war.nameA}
       nameB={war.nameB}
       imageUrl={`https://placehold.co/600x340/0b0c10/4caf50?text=⚡+LIVE+WAR+%23${warId}&font=montserrat`}
-      category={statusLabels[status]}
+      category={hasEnded ? "SETTLE" : statusLabels[status]}
       pctA={pctA}
-      tvlA={Number(war.tvlA) / 1e6}
-      tvlB={Number(war.tvlB) / 1e6}
+      tvlA={Number(war.tvlA) / 1e18}
+      tvlB={Number(war.tvlB) / 1e18}
       participants={Number(war.participantCount)}
       endTime={Number(war.endTime)}
       yieldBps={Number(war.mockYieldBps)}
       featured={featured}
-      hot={status === 0}
+      hot={status === 0 && !hasEnded}
       onClick={onClick}
     />
   );

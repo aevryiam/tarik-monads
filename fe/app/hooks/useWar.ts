@@ -3,7 +3,7 @@
 // ============================================================================
 "use client";
 
-import { useReadContract, useReadContracts } from "wagmi";
+import { useReadContracts } from "wagmi";
 import { ADDRESSES } from "@/app/config/addresses";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 import { REFETCH_INTERVAL } from "@/app/config/constants";

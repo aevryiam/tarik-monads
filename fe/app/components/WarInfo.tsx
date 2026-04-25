@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatCompactMON } from "@/app/lib/formatters";
 
 interface WarInfoProps {
   warId: number;
@@ -15,8 +16,17 @@ interface WarInfoProps {
   totalYield: bigint;
 }
 
+function formatTime(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
 export default function WarInfo(props: WarInfoProps) {
-  const { warId, nameA, nameB, startTime, endTime, status, participantCount, totalDeposits, yieldBps, totalYield } = props;
+  const { warId, startTime, endTime, status, participantCount, totalDeposits, yieldBps, totalYield } = props;
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
@@ -37,20 +47,6 @@ export default function WarInfo(props: WarInfoProps) {
     return () => clearInterval(interval);
   }, [startTime, endTime, status]);
 
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    if (h > 0) return `${h}h ${m}m ${s}s`;
-    if (m > 0) return `${m}m ${s}s`;
-    return `${s}s`;
-  };
-
-  /** Locale-independent: always uses comma thousands separator */
-  const formatUSDC = (val: bigint) => {
-    const n = Math.round(Number(val) / 1e6);
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
   const statusLabels = ["ACTIVE", "RESOLVED", "CANCELLED"];
   const statusClass = ["badge-active", "badge-resolved", "badge-cancelled"];
 
@@ -92,11 +88,11 @@ export default function WarInfo(props: WarInfoProps) {
         }}
       >
         <StatBox label="Time Remaining" value={timeLeft} accent={status === 0} />
-        <StatBox label="Total Staked" value={`$${formatUSDC(totalDeposits)}`} />
+        <StatBox label="Total Staked" value={formatCompactMON(totalDeposits)} />
         <StatBox label="Yield Rate" value={`${yieldBps / 100}%`} accent />
         <StatBox label="Participants" value={participantCount.toString()} />
         {status === 1 && (
-          <StatBox label="Total Yield" value={`$${formatUSDC(totalYield)}`} gold />
+          <StatBox label="Total Yield" value={formatCompactMON(totalYield)} gold />
         )}
       </div>
     </div>

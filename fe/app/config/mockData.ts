@@ -9,8 +9,8 @@ export interface MockCampaign {
   nameB: string;
   category: string;
   pctA: number;  // 0-100
-  tvlA: number;  // in USDC
-  tvlB: number;
+  tvlA: number;  // in MON
+  tvlB: number;  // in MON
   participants: number;
   endTime: number;
   yieldBps: number;

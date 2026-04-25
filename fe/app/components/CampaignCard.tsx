@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ComponentType } from "react";
 import LightningEffect from "./LightningEffect";
 import Sparkline from "./Sparkline";
 import { icons } from "lucide-react";
+
+type CardIcon = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 interface CampaignCardProps {
   id: number;
@@ -36,12 +38,13 @@ export default function CampaignCard({
 
   const getCategoryColor = (cat: string) => {
     switch (cat.toLowerCase()) {
-      case "politik": return { color: "var(--gold)", border: "rgba(217,119,6,0.4)", shadow: "0 2px 8px rgba(217,119,6,0.15)" };
-      case "crypto": return { color: "#10b981", border: "rgba(16,185,129,0.4)", shadow: "0 2px 8px rgba(16,185,129,0.15)" };
-      case "sports": return { color: "#3b82f6", border: "rgba(59,130,246,0.4)", shadow: "0 2px 8px rgba(59,130,246,0.15)" };
-      case "tech": return { color: "#8b5cf6", border: "rgba(139,92,246,0.4)", shadow: "0 2px 8px rgba(139,92,246,0.15)" };
-      case "live": return { color: "#10b981", border: "rgba(16,185,129,0.4)", shadow: "0 2px 8px rgba(16,185,129,0.15)" };
-      default: return { color: "var(--text-secondary)", border: "rgba(0,0,0,0.1)", shadow: "0 2px 8px rgba(0,0,0,0.05)" };
+      case "politik": return { bg: "rgba(217,119,6,0.15)", color: "var(--gold)", border: "rgba(217,119,6,0.2)" };
+      case "crypto": return { bg: "rgba(16,185,129,0.15)", color: "#10b981", border: "rgba(16,185,129,0.2)" };
+      case "sports": return { bg: "rgba(59,130,246,0.15)", color: "#3b82f6", border: "rgba(59,130,246,0.2)" };
+      case "tech": return { bg: "rgba(139,92,246,0.15)", color: "#8b5cf6", border: "rgba(139,92,246,0.2)" };
+      case "live": return { bg: "rgba(16,185,129,0.15)", color: "#10b981", border: "rgba(16,185,129,0.2)" };
+      case "settle": return { bg: "rgba(255,215,0,0.15)", color: "var(--gold)", border: "rgba(255,215,0,0.25)" };
+      default: return { bg: "var(--bg-secondary)", color: "var(--text-accent)", border: "var(--border-subtle)" };
     }
   };
   const catStyles = getCategoryColor(category);
@@ -72,18 +75,35 @@ export default function CampaignCard({
   const totalTVL = tvlA + tvlB;
 
   // Render Icon if exists
-  const IconComponent = iconName ? (icons as any)[iconName] : null;
+  const iconMap = icons as unknown as Record<string, CardIcon>;
+  const IconComponent = iconName ? iconMap[iconName] : null;
 
-  // $10 Bet Simulation logic
-  // Calculate total return based on proportion
-  const calcReturn = (sideTvl: number) => {
+  // 10 MON stake simulation logic
+  const calcBaseReturn = useCallback((sideTvl: number) => {
     if (sideTvl === 0) return 0;
-    // You get your $10 back + proportion of the other side's TVL
     const myShare = 10 / (sideTvl + 10);
     const otherSideTvl = sideTvl === tvlA ? tvlB : tvlA;
     const profit = myShare * otherSideTvl;
     return (10 + profit).toFixed(2);
-  };
+  }, [tvlA, tvlB]);
+
+  const [animatedReturnA, setAnimatedReturnA] = useState(calcBaseReturn(tvlA));
+  const [animatedReturnB, setAnimatedReturnB] = useState(calcBaseReturn(tvlB));
+
+  useEffect(() => {
+    if (!featured) return;
+    const baseA = parseFloat(calcBaseReturn(tvlA) as string);
+    const baseB = parseFloat(calcBaseReturn(tvlB) as string);
+
+    const interval = setInterval(() => {
+      // Fluctuate slightly every 2 seconds
+      const fluxA = (Math.random() * 0.3 - 0.15);
+      const fluxB = (Math.random() * 0.3 - 0.15);
+      setAnimatedReturnA((baseA + fluxA).toFixed(2));
+      setAnimatedReturnB((baseB + fluxB).toFixed(2));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [calcBaseReturn, featured, tvlA, tvlB]);
 
   /** Locale-independent number formatter — always uses comma thousands separator */
   const fmt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -138,10 +158,9 @@ export default function CampaignCard({
           <span style={{
             padding: "3px 8px", borderRadius: 4, fontSize: "0.6rem",
             fontFamily: "var(--font-mono)", fontWeight: 700,
-            background: "#ffffff", 
+            background: catStyles.bg,
             border: `1px solid ${catStyles.border}`,
-            boxShadow: catStyles.shadow,
-            color: catStyles.color, 
+            color: catStyles.color,
             textTransform: "uppercase",
             letterSpacing: "0.1em",
           }}>
@@ -234,7 +253,7 @@ export default function CampaignCard({
               </span>
               {trendA && trendA.length > 0 && <Sparkline data={trendA} color="var(--red-main)" />}
             </div>
-            
+
             <span style={{
               fontFamily: "var(--font-mono)",
               fontSize: featured ? "1.1rem" : "0.85rem",
@@ -286,7 +305,7 @@ export default function CampaignCard({
                 />
               )}
             </motion.div>
-            
+
             {/* Lightning Effect positioned at the junction */}
             {isClose && (
               <motion.div
@@ -322,7 +341,7 @@ export default function CampaignCard({
               fontSize: "0.65rem",
               color: "var(--text-dim)",
             }}>
-              ${fmt(totalTVL)} TVL
+              {fmt(totalTVL)} MON TVL
             </span>
             <span style={{
               fontFamily: "var(--font-mono)",
@@ -358,36 +377,36 @@ export default function CampaignCard({
           }}>
              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)", textTransform: "uppercase" }}>{nameA} return</span>
-               <motion.span 
+               <motion.span
                  animate={{ scale: [1, 1.05, 0.98, 1], color: ["var(--red-main)", "var(--red-glow)", "var(--red-main)", "var(--red-main)"] }}
-                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                  style={{ fontFamily: "var(--font-mono)", fontSize: "1rem", color: "var(--red-main)", fontWeight: 700, display: "inline-block" }}
                >
-                 ${calcReturn(tvlA)}
+                 {animatedReturnA} MON
                </motion.span>
              </div>
-             
-             <div style={{ 
-               fontFamily: "var(--font-display)", 
-               fontSize: "1rem", 
-               color: "var(--text-secondary)", 
-               letterSpacing: "0.05em", 
+
+             <div style={{
+               fontFamily: "var(--font-display)",
+               fontSize: "1rem",
+               color: "var(--text-secondary)",
+               letterSpacing: "0.05em",
                background: "var(--bg-secondary)",
                padding: "4px 12px",
                borderRadius: 20,
                border: "1px solid var(--border-subtle)"
              }}>
-               $10 BET PAYS
+               10 MON RETURNS
              </div>
-             
+
              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)", textTransform: "uppercase" }}>{nameB} return</span>
-               <motion.span 
+               <motion.span
                  animate={{ scale: [1, 0.98, 1.05, 1], color: ["var(--blue-main)", "var(--blue-main)", "var(--blue-glow)", "var(--blue-main)"] }}
-                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 0.5 }}
+                 transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut", delay: 0.5 }}
                  style={{ fontFamily: "var(--font-mono)", fontSize: "1rem", color: "var(--blue-main)", fontWeight: 700, display: "inline-block" }}
                >
-                 ${calcReturn(tvlB)}
+                 {animatedReturnB} MON
                </motion.span>
              </div>
           </div>

@@ -8,7 +8,7 @@ import { useAccount } from "wagmi";
 import { ADDRESSES } from "@/app/config/addresses";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 import { REFETCH_INTERVAL } from "@/app/config/constants";
-import { WarStatus, WarSide } from "@/app/types/contracts";
+import { WarStatus } from "@/app/types/contracts";
 import type { UserDeposit, War } from "@/app/types/contracts";
 
 interface UseUserDepositResult {

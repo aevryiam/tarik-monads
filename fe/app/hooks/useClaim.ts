@@ -14,7 +14,7 @@ import { toastSuccess, toastError, toastPending, toastDismiss } from "@/app/lib/
 interface UseClaimResult {
   /** Klaim principal (wajib dilakukan sebelum openCrate) */
   claimPrincipal: () => void;
-  /** Buka Victory Crate untuk mengklaim yield USDC */
+  /** Buka Victory Crate untuk mengklaim yield MON */
   openCrate: () => void;
   isClaiming: boolean;
   isOpening: boolean;
@@ -58,7 +58,7 @@ export function useClaim(warId: number): UseClaimResult {
   // Setelah open crate berhasil
   useEffect(() => {
     if (openSuccess && openTxHash) {
-      toastSuccess("🎁 Victory Crate dibuka! Yield USDC diterima!", openTxHash);
+      toastSuccess("Victory Crate dibuka! Yield MON diterima!", openTxHash);
       queryClient.invalidateQueries();
     }
   }, [openSuccess, openTxHash, queryClient]);

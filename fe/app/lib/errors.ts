@@ -22,9 +22,8 @@ const CONTRACT_ERRORS: Record<string, string> = {
   VictoryCrateNotSet: "Kontrak Victory Crate belum dikonfigurasi oleh admin.",
   WarAlreadyResolved: "War ini sudah diselesaikan atau dibatalkan.",
   InvalidYieldBps: "Yield BPS tidak valid (harus antara 1 dan 10000).",
-
-  // MockUSDC errors
-  FaucetCooldown: "Faucet masih cooldown. Coba lagi dalam beberapa menit.",
+  InvalidMsgValue: "Jumlah MON yang dikirim tidak sesuai dengan input deposit.",
+  NativeTransferFailed: "Transfer MON gagal. Coba lagi atau cek wallet tujuan.",
 
   // VictoryCrate errors
   OnlyMinter: "Hanya vault yang bisa mint crate.",
@@ -48,15 +47,6 @@ export function parseContractError(error: unknown): string {
   // Cari nama error custom di pesan
   for (const [errorName, userMessage] of Object.entries(CONTRACT_ERRORS)) {
     if (message.includes(errorName)) {
-      // Handle FaucetCooldown dengan extract waktu jika ada
-      if (errorName === "FaucetCooldown") {
-        const match = message.match(/remainingTime[:\s]+(\d+)/);
-        if (match) {
-          const seconds = parseInt(match[1]);
-          const minutes = Math.ceil(seconds / 60);
-          return `Faucet masih cooldown. Coba lagi dalam ${minutes} menit.`;
-        }
-      }
       return userMessage;
     }
   }

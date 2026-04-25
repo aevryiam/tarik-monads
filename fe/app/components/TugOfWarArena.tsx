@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { ASSET_SYMBOL, MON_DECIMALS } from "@/app/config/constants";
+import { formatCompactMON } from "@/app/lib/formatters";
 
 interface TugOfWarArenaProps {
   nameA: string;
@@ -120,7 +122,7 @@ export default function TugOfWarArena(props: TugOfWarArenaProps) {
   // Simulate yield ticking up for visual effect
   useEffect(() => {
     if (status !== 0 || totalDeposits === BigInt(0)) return;
-    const baseYield = Number(totalDeposits) / 1e6 * (yieldBps / 10000);
+    const baseYield = Number(totalDeposits) / 10 ** MON_DECIMALS * (yieldBps / 10000);
     const interval = setInterval(() => {
       setYieldTicker((prev) => {
         const next = prev + (baseYield / 3600) * 0.5; // ticks every 500ms
@@ -134,10 +136,6 @@ export default function TugOfWarArena(props: TugOfWarArenaProps) {
     const timer = setTimeout(() => setShowIntro(false), 2200);
     return () => clearTimeout(timer);
   }, []);
-
-  const formatUSDC = (val: bigint) => {
-    return Number(val / BigInt(1e6)).toLocaleString();
-  };
 
   return (
     <div style={{ position: "relative", width: "100%", minHeight: 500 }}>
@@ -287,10 +285,10 @@ export default function TugOfWarArena(props: TugOfWarArenaProps) {
           {/* TVL amounts */}
           <div style={{ display: "flex", justifyContent: "space-between", width: "100%", maxWidth: 400 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--red-light)" }}>
-              ${formatUSDC(tvlA)}
+              {formatCompactMON(tvlA)}
             </div>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--blue-light)" }}>
-              ${formatUSDC(tvlB)}
+              {formatCompactMON(tvlB)}
             </div>
           </div>
 
@@ -311,10 +309,10 @@ export default function TugOfWarArena(props: TugOfWarArenaProps) {
                 Yield Accruing
               </div>
               <div className="yield-counter">
-                +${yieldTicker.toFixed(4)}
+                +{yieldTicker.toFixed(4)} {ASSET_SYMBOL}
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)", marginTop: 4 }}>
-                {yieldBps / 100}% APY → Winner takes all
+                {yieldBps / 100}% simulated yield {"->"} winner takes all
               </div>
             </motion.div>
           )}

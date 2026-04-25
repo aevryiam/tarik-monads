@@ -1,29 +1,25 @@
 // ============================================================================
-// hooks/useDeposit.ts — Write hook: approve (exact) + deposit ke TarikVault
+// hooks/useDeposit.ts - Write hook: native MON deposit ke TarikVault
 // ============================================================================
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
-import { parseUnits } from "viem";
+import { parseEther } from "viem";
 import { ADDRESSES } from "@/app/config/addresses";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
-import { MOCK_USDC_ABI } from "@/app/contracts/abi/MockUSDC.abi";
-import { USDC_DECIMALS } from "@/app/config/constants";
+import { ASSET_SYMBOL } from "@/app/config/constants";
 import { parseContractError } from "@/app/lib/errors";
 import { toastSuccess, toastError, toastPending, toastDismiss } from "@/app/lib/toast";
 
 interface UseDepositResult {
   /**
-   * Jalankan deposit. Jika allowance kurang, otomatis approve dulu
-   * (exact approve — approve sejumlah amount, bukan infinite).
+   * Jalankan deposit native MON.
    * @param side 1 = Side A, 2 = Side B
-   * @param amountStr jumlah dalam string USDC (misal "1000")
-   * @param currentAllowance allowance saat ini dari useTokenBalance
+   * @param amountStr jumlah dalam string MON (misal "1.5")
    */
-  deposit: (side: 1 | 2, amountStr: string, currentAllowance: bigint) => void;
-  isApproving: boolean;
+  deposit: (side: 1 | 2, amountStr: string) => void;
   isDepositing: boolean;
   isConfirming: boolean;
   depositTxHash: `0x${string}` | undefined;
@@ -32,23 +28,10 @@ interface UseDepositResult {
 export function useDeposit(warId: number): UseDepositResult {
   const queryClient = useQueryClient();
 
-  // --- Approve ---
-  const {
-    writeContract: writeApprove,
-    data: approveTxHash,
-    isPending: isApproving,
-    reset: resetApprove,
-  } = useWriteContract();
-
-  const { isLoading: approveConfirming, isSuccess: approveSuccess } =
-    useWaitForTransactionReceipt({ hash: approveTxHash });
-
-  // --- Deposit ---
   const {
     writeContract: writeDeposit,
     data: depositTxHash,
     isPending: isDepositing,
-    reset: resetDeposit,
   } = useWriteContract();
 
   const { isLoading: depositConfirming, isSuccess: depositSuccess } =
@@ -74,14 +57,13 @@ export function useDeposit(warId: number): UseDepositResult {
   // Ketika deposit sukses → toast + invalidate queries
   useEffect(() => {
     if (depositSuccess && depositTxHash) {
-      toastSuccess("Deposit berhasil! 🎉", depositTxHash);
-      // Invalidate semua read queries agar data refresh otomatis
+      toastSuccess(`Deposit ${ASSET_SYMBOL} berhasil!`, depositTxHash);
       queryClient.invalidateQueries();
     }
   }, [depositSuccess, depositTxHash, queryClient]);
 
   const deposit = useCallback(
-    (side: 1 | 2, amountStr: string, currentAllowance: bigint) => {
+    (side: 1 | 2, amountStr: string) => {
       if (!amountStr || parseFloat(amountStr) <= 0) {
         toastError("Masukkan jumlah deposit yang valid.");
         return;
@@ -89,65 +71,37 @@ export function useDeposit(warId: number): UseDepositResult {
 
       let amount: bigint;
       try {
-        amount = parseUnits(amountStr, USDC_DECIMALS);
+        amount = parseEther(amountStr);
       } catch {
         toastError("Format jumlah tidak valid.");
         return;
       }
 
-      // Exact approve: cek apakah allowance saat ini mencukupi
-      if (currentAllowance < amount) {
-        // Simpan deposit args untuk dieksekusi setelah approve
-        pendingDepositArgs.current = { side, amount };
-
-        const toastId = toastPending("Menunggu persetujuan mUSDC…");
-        writeApprove(
-          {
-            address: ADDRESSES.mockUSDC,
-            abi: MOCK_USDC_ABI,
-            functionName: "approve",
-            args: [ADDRESSES.tarikVault, amount], // exact amount
+      const toastId = toastPending(`Mengirim deposit ${ASSET_SYMBOL}...`);
+      writeDeposit(
+        {
+          address: ADDRESSES.tarikVault,
+          abi: TARIK_VAULT_ABI,
+          functionName: "deposit",
+          args: [BigInt(warId), side, amount],
+          value: amount,
+        },
+        {
+          onError: (err) => {
+            toastDismiss(toastId);
+            toastError(parseContractError(err));
           },
-          {
-            onError: (err) => {
-              toastDismiss(toastId);
-              toastError(parseContractError(err));
-              pendingDepositArgs.current = null;
-            },
-            onSuccess: () => {
-              toastDismiss(toastId);
-              toastPending("Approve sukses, mengirim deposit…");
-            },
-          }
-        );
-      } else {
-        // Allowance cukup → langsung deposit
-        const toastId = toastPending("Mengirim deposit…");
-        writeDeposit(
-          {
-            address: ADDRESSES.tarikVault,
-            abi: TARIK_VAULT_ABI,
-            functionName: "deposit",
-            args: [BigInt(warId), side, amount],
-          },
-          {
-            onError: (err) => {
-              toastDismiss(toastId);
-              toastError(parseContractError(err));
-            },
-            onSuccess: () => toastDismiss(toastId),
-          }
-        );
-      }
+          onSuccess: () => toastDismiss(toastId),
+        }
+      );
     },
-    [warId, writeApprove, writeDeposit] // eslint-disable-line react-hooks/exhaustive-deps
+    [warId, writeDeposit]
   );
 
   return {
     deposit,
-    isApproving,
     isDepositing,
-    isConfirming: approveConfirming || depositConfirming,
+    isConfirming: depositConfirming,
     depositTxHash,
   };
 }

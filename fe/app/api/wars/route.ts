@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createPublicClient, http } from "viem";
-import { ADDRESSES, TARIK_VAULT_ABI } from "@/app/config/contracts";
+import { ADDRESSES } from "@/app/config/addresses";
+import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 
 const monadTestnet = {
   id: 10143,

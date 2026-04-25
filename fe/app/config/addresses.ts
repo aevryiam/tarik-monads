@@ -4,14 +4,9 @@
 
 /**
  * Semua contract addresses dibaca dari NEXT_PUBLIC_ env vars.
- * Nilai fallback adalah address yang sudah di-deploy ke Monad Testnet.
+ * Ganti fallback ini setelah redeploy native MON contracts.
  */
 export const ADDRESSES = {
-  mockUSDC: (
-    process.env.NEXT_PUBLIC_MOCK_USDC_ADDRESS ||
-    "0x5EE996C5000296057150CF14ACcC3E8ED5d9C720"
-  ) as `0x${string}`,
-
   victoryCrate: (
     process.env.NEXT_PUBLIC_VICTORY_CRATE_ADDRESS ||
     "0xA048f32a432F6CA02321227Ae36Fa20e114c1661"

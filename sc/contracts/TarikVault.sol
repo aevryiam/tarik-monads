@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -18,21 +16,19 @@ interface IVictoryCrate {
 ///
 /// How it works:
 ///   1. A "war" (round) is created by the owner with a duration.
-///   2. Users deposit USDC to Side A or Side B during the deposit window.
+///   2. Users deposit native MON to Side A or Side B during the deposit window.
 ///   3. Mock yield accrues over time (simulating Aave/Compound).
 ///   4. Owner resolves the war, picking the winning side.
 ///   5. Losers claim back 100% of their principal (0 yield).
 ///   6. Winners claim back 100% principal + receive a Victory Crate NFT
 ///      representing their share of ALL yield from both sides.
-///   7. Winners can later "open" their crate to claim the yield USDC.
+///   7. Winners can later "open" their crate to claim the yield MON.
 ///
 /// Safety:
 ///   - ReentrancyGuard on all external state-changing functions
-///   - SafeERC20 for all token transfers
+///   - Pull-style native MON payouts with checked calls
 ///   - Principal is NEVER at risk
 contract TarikVault is Ownable, ReentrancyGuard {
-    using SafeERC20 for IERC20;
-
     // =========================================================================
     // Types
     // =========================================================================
@@ -71,9 +67,6 @@ contract TarikVault is Ownable, ReentrancyGuard {
     // =========================================================================
     // State
     // =========================================================================
-
-    /// @notice The staking token (Mock USDC)
-    IERC20 public immutable stakingToken;
 
     /// @notice The Victory Crate NFT contract
     IVictoryCrate public victoryCrate;
@@ -156,18 +149,17 @@ contract TarikVault is Ownable, ReentrancyGuard {
     error VictoryCrateNotSet();
     error WarAlreadyResolved();
     error InvalidYieldBps();
+    error InvalidMsgValue();
+    error NativeTransferFailed();
 
     // =========================================================================
     // Constructor
     // =========================================================================
 
-    /// @param _stakingToken Address of the ERC20 token used for deposits (Mock USDC)
     /// @param _owner Address of the contract owner
     constructor(
-        address _stakingToken,
         address _owner
     ) Ownable(_owner) {
-        stakingToken = IERC20(_stakingToken);
     }
 
     // =========================================================================
@@ -247,25 +239,26 @@ contract TarikVault is Ownable, ReentrancyGuard {
         emit WarCancelled(warId);
     }
 
-    /// @notice Owner deposits yield USDC into the vault to cover mock yield payouts.
+    /// @notice Owner deposits yield MON into the vault to cover mock yield payouts.
     ///         This simulates the yield that would come from DeFi protocols.
-    /// @param amount Amount of USDC to deposit as yield reserve
-    function fundYieldReserve(uint256 amount) external onlyOwner {
+    /// @param amount Amount of MON to deposit as yield reserve
+    function fundYieldReserve(uint256 amount) external payable onlyOwner {
         if (amount == 0) revert ZeroAmount();
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        if (msg.value != amount) revert InvalidMsgValue();
     }
 
     // =========================================================================
     // User Functions
     // =========================================================================
 
-    /// @notice Deposit USDC to a side in an active war
+    /// @notice Deposit native MON to a side in an active war
     /// @param warId ID of the war to deposit into
     /// @param side 1 for Side A, 2 for Side B
-    /// @param amount Amount of USDC to deposit
-    function deposit(uint256 warId, uint8 side, uint256 amount) external nonReentrant {
+    /// @param amount Amount of MON to deposit
+    function deposit(uint256 warId, uint8 side, uint256 amount) external payable nonReentrant {
         if (side != 1 && side != 2) revert InvalidSide();
         if (amount == 0) revert ZeroAmount();
+        if (msg.value != amount) revert InvalidMsgValue();
 
         War storage war = wars[warId];
         if (war.status != WarStatus.Active) revert WarNotActive();
@@ -277,9 +270,6 @@ contract TarikVault is Ownable, ReentrancyGuard {
 
         // If user already deposited, they must deposit to the same side
         if (userDep.amount > 0 && userDep.side != side) revert InvalidSide();
-
-        // Transfer tokens from user
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
 
         // Update user deposit
         userDep.amount += amount;
@@ -319,11 +309,6 @@ contract TarikVault is Ownable, ReentrancyGuard {
         userDep.claimed = true;
         uint256 principal = userDep.amount;
 
-        // Return principal to everyone regardless of outcome
-        stakingToken.safeTransfer(msg.sender, principal);
-
-        emit PrincipalClaimed(warId, msg.sender, principal);
-
         // If resolved (not cancelled) and user is on winning side → mint Victory Crate
         if (war.status == WarStatus.Resolved && userDep.side == war.winningSide) {
             if (address(victoryCrate) == address(0)) revert VictoryCrateNotSet();
@@ -335,9 +320,14 @@ contract TarikVault is Ownable, ReentrancyGuard {
 
             victoryCrate.mintCrate(msg.sender, warId, userYield);
         }
+
+        // Return principal to everyone regardless of outcome
+        _sendMON(msg.sender, principal);
+
+        emit PrincipalClaimed(warId, msg.sender, principal);
     }
 
-    /// @notice Winners open their Victory Crate to claim yield USDC
+    /// @notice Winners open their Victory Crate to claim yield MON
     /// @param warId ID of the war whose crate to open
     function openCrate(uint256 warId) external nonReentrant {
         War storage war = wars[warId];
@@ -359,10 +349,15 @@ contract TarikVault is Ownable, ReentrancyGuard {
             victoryCrate.markOpened(msg.sender, warId);
         }
 
-        // Transfer yield USDC
-        stakingToken.safeTransfer(msg.sender, userYield);
+        // Transfer yield MON
+        _sendMON(msg.sender, userYield);
 
         emit YieldClaimed(warId, msg.sender, userYield);
+    }
+
+    function _sendMON(address to, uint256 amount) internal {
+        (bool success, ) = payable(to).call{value: amount}("");
+        if (!success) revert NativeTransferFailed();
     }
 
     // =========================================================================

@@ -5,7 +5,7 @@ Satu Codebase. Tiga Chain. Tiga Kemenangan.
 
 1. INTISARI KONSEP (ELEVATOR PITCH)
 
-TARIK adalah platform DeFi berbasis gamifikasi di mana pengguna mempertaruhkan aset mereka (USDC/Native Token) ke salah satu dari dua kubu yang sedang "bertanding" (Misal: Bull vs Bear, Tim A vs Tim B).
+TARIK adalah platform DeFi berbasis gamifikasi di mana pengguna mempertaruhkan native MON di Monad ke salah satu dari dua kubu yang sedang "bertanding" (Misal: Bull vs Bear, Tim A vs Tim B).
 
 Aturan Emas:
 
@@ -55,9 +55,9 @@ Konsep: Saat kubu kamu menang, kamu tidak mendapatkan yield dalam bentuk angka s
 
 Dopamin: User harus mengklik kotak tersebut (dengan animasi ledakan/partikel yang heboh menggunakan Framer Motion). Di dalamnya berisi:
 
-90% chance: Yield USDC normal kamu.
+90% chance: Yield MON normal kamu.
 
-9% chance: Yield USDC + Token Eksklusif/Memecoin.
+9% chance: Yield MON + Token Eksklusif/Memecoin.
 
 1% chance: Jackpot (NFT SSR, Badge khusus, atau multiplier).
 
@@ -101,7 +101,7 @@ Di tengah ada "Tali" atau "Progress Bar" raksasa yang posisinya berubah secara d
 
 Action Panel:
 
-Input amount (USDC).
+Input amount (MON).
 
 Tombol "Stake Side A" / "Stake Side B".
 
@@ -133,7 +133,7 @@ Gunakan prompt di bawah ini secara berurutan saat kamu mulai ngoding untuk meng-
 
 Prompt 1: Smart Contract Foundation
 
-"Buatkan saya Smart Contract Solidity bernama TarikVault.sol. Contract ini adalah platform 'Lossless Prediction'. User bisa deposit(uint8 side) dengan token ERC20 (mock USDC) ke Side 1 atau Side 2. Contract memiliki variabel mockYield yang bertambah nilainya untuk mensimulasikan bunga DeFi. Buatkan fungsi resolve(uint8 winningSide) khusus owner. Lalu buat fungsi claim(): jika user berada di winningSide, modalnya kembali 100% ditambah dia di-mint token ERC1155 (sebagai Victory Crate). Jika kalah, dia hanya dapat modal awal saja kembali. Pastikan kodenya aman dari reentrancy."
+"Buatkan saya Smart Contract Solidity bernama TarikVault.sol. Contract ini adalah platform 'Lossless Prediction'. User bisa deposit native MON ke Side 1 atau Side 2 dengan payable transaction. Contract memiliki variabel mockYield yang bertambah nilainya untuk mensimulasikan bunga DeFi. Buatkan fungsi resolve(uint8 winningSide) khusus owner. Lalu buat fungsi claim(): jika user berada di winningSide, modalnya kembali 100% ditambah dia di-mint token ERC1155 (sebagai Victory Crate). Jika kalah, dia hanya dapat modal awal saja kembali. Pastikan kodenya aman dari reentrancy."
 
 Prompt 2: Next.js + Wagmi Setup & Theming
 
@@ -152,4 +152,4 @@ Titik temu (persentase) antara A dan B harus bergeser secara mulus (smooth anima
 
 Prompt 4: The GameFi Lootbox Component (Gacha Animation)
 
-"Buatkan komponen React bernama VictoryCrate.tsx menggunakan Framer Motion. Komponen ini menampilkan gambar sebuah peti harta karun tertutup. Ketika di-klik, buat animasi bergetar (shake) yang intens selama 2 detik, layaknya game Gacha, lalu peti terbuka memancarkan cahaya (glow/scale-up) dan menampilkan teks hasil hadiah acak (contoh: '+50 USDC Yield' atau 'SSR MFER NFT')."
+"Buatkan komponen React bernama VictoryCrate.tsx menggunakan Framer Motion. Komponen ini menampilkan gambar sebuah peti harta karun tertutup. Ketika di-klik, buat animasi bergetar (shake) yang intens selama 2 detik, layaknya game Gacha, lalu peti terbuka memancarkan cahaya (glow/scale-up) dan menampilkan teks hasil hadiah acak (contoh: '+50 MON Yield' atau 'SSR MFER NFT')."

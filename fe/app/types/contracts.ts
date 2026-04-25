@@ -39,7 +39,7 @@ export interface War {
  * Struct UserDeposit dari TarikVault.getUserDeposit()
  */
 export interface UserDeposit {
-  amount: bigint;       // Principal deposited (dalam mUSDC 6 desimal)
+  amount: bigint;       // Principal deposited (dalam native MON 18 desimal)
   side: number;         // 1 = Side A, 2 = Side B
   claimed: boolean;     // Principal sudah diklaim?
   yieldClaimed: boolean;// Yield (crate) sudah dibuka?

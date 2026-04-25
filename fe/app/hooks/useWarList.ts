@@ -58,11 +58,11 @@ export function useWarList(): UseWarListResult {
     .filter((w): w is WarWithId => w !== null);
 
   /**
-   * War ditampilkan di "LIVE ON-CHAIN" hanya jika status masih Active
-   * dan batas waktu (endTime) belum terlewat.
+   * Tampilkan semua campaign Active. Campaign yang endTime-nya sudah lewat
+   * tetap perlu muncul agar owner bisa resolve dan user paham campaign-nya
+   * belum hilang, hanya menunggu settlement.
    */
-  const nowSec = BigInt(Math.floor(Date.now() / 1000));
-  const activeWars = wars.filter((w) => w.status === WarStatus.Active && w.endTime > nowSec);
+  const activeWars = wars.filter((w) => w.status === WarStatus.Active);
 
   const resolvedWars = wars.filter(
     (w) => w.status === WarStatus.Resolved || w.status === WarStatus.Cancelled

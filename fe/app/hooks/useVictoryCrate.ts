@@ -14,7 +14,7 @@ interface UseVictoryCrateResult {
   hasCrate: boolean;
   /** Apakah crate sudah dibuka (yield diklaim) */
   isOpened: boolean;
-  /** Jumlah yield USDC dalam crate (bigint, 6 desimal) */
+  /** Jumlah yield MON dalam crate (bigint, 18 desimal) */
   yieldAmount: bigint;
   /** Balance ERC1155 mentah */
   balance: bigint;

@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 // A single lightning bolt path
 function LightningBolt({ delay, side }: { delay: number; side: "left" | "right" }) {
   const [path, setPath] = useState("");
+  const repeatDelay = 2 + ((delay * 10) % 4);
 
   useEffect(() => {
     const generatePath = () => {
@@ -42,7 +43,7 @@ function LightningBolt({ delay, side }: { delay: number; side: "left" | "right" 
         duration: 0.4,
         delay,
         repeat: Infinity,
-        repeatDelay: 2 + Math.random() * 4,
+        repeatDelay,
         times: [0, 0.3, 0.7, 1],
       }}
       style={{

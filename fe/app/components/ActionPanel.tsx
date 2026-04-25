@@ -6,7 +6,8 @@ import { useDeposit } from "@/app/hooks/useDeposit";
 import { useClaim } from "@/app/hooks/useClaim";
 import { useUserDeposit } from "@/app/hooks/useUserDeposit";
 import { useTokenBalance } from "@/app/hooks/useTokenBalance";
-import { formatUSDC } from "@/app/lib/formatters";
+import { ASSET_SYMBOL } from "@/app/config/constants";
+import { formatMON } from "@/app/lib/formatters";
 import type { War } from "@/app/types/contracts";
 
 interface ActionPanelProps {
@@ -25,7 +26,6 @@ export default function ActionPanel({
   nameB,
   isOpen,
   status,
-  winningSide,
   war,
 }: ActionPanelProps) {
   const { address } = useAccount();
@@ -42,11 +42,10 @@ export default function ActionPanel({
     isWinner,
   } = useUserDeposit(warId);
 
-  const { balance, needsApproval, allowance } = useTokenBalance();
+  const { balance } = useTokenBalance();
 
   // Write hooks
-  const { deposit, isApproving, isDepositing, isConfirming: depositConfirming } =
-    useDeposit(warId);
+  const { deposit, isDepositing, isConfirming: depositConfirming } = useDeposit(warId);
 
   const {
     claimPrincipal,
@@ -59,12 +58,12 @@ export default function ActionPanel({
 
   const userIsWinner = isWinner(war);
   const isBusy =
-    isApproving || isDepositing || depositConfirming ||
+    isDepositing || depositConfirming ||
     isClaiming || isClaimConfirming ||
     isOpening || isOpenConfirming;
 
   const handleDeposit = (side: 1 | 2) => {
-    deposit(side, amount, allowance);
+    deposit(side, amount);
   };
 
   if (!address) {
@@ -86,7 +85,7 @@ export default function ActionPanel({
 
   return (
     <div className="card" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* mUSDC Balance */}
+      {/* MON Balance */}
       <div
         style={{
           fontFamily: "var(--font-mono)",
@@ -98,7 +97,7 @@ export default function ActionPanel({
       >
         Balance:{" "}
         <span style={{ color: "var(--text-secondary)" }}>
-          {formatUSDC(balance)} mUSDC
+          {formatMON(balance)} {ASSET_SYMBOL}
         </span>
       </div>
 
@@ -144,7 +143,7 @@ export default function ActionPanel({
                   marginLeft: 12,
                 }}
               >
-                ${formatUSDC(userDeposit.amount)}
+                {formatMON(userDeposit.amount)} {ASSET_SYMBOL}
               </span>
             </div>
             {estimatedYield > BigInt(0) && (
@@ -168,7 +167,7 @@ export default function ActionPanel({
                     textShadow: "0 0 6px rgba(255,215,0,0.3)",
                   }}
                 >
-                  +${formatUSDC(estimatedYield)}
+                  +{formatMON(estimatedYield)} {ASSET_SYMBOL}
                 </div>
               </div>
             )}
@@ -192,20 +191,20 @@ export default function ActionPanel({
                 display: "block",
               }}
             >
-              Stake Amount (mUSDC)
+              Stake Amount ({ASSET_SYMBOL})
             </label>
             <div style={{ display: "flex", gap: 8 }}>
               <input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="1000"
+                placeholder="1.0"
                 className="input-field"
                 min="0"
-                step="100"
+                step="0.1"
               />
               <button
-                onClick={() => setAmount("1000")}
+                onClick={() => setAmount("1")}
                 style={{
                   padding: "0 12px",
                   background: "var(--bg-card)",
@@ -217,10 +216,10 @@ export default function ActionPanel({
                   cursor: "pointer",
                 }}
               >
-                1K
+                1
               </button>
               <button
-                onClick={() => setAmount("5000")}
+                onClick={() => setAmount("5")}
                 style={{
                   padding: "0 12px",
                   background: "var(--bg-card)",
@@ -232,24 +231,10 @@ export default function ActionPanel({
                   cursor: "pointer",
                 }}
               >
-                5K
+                5
               </button>
             </div>
           </div>
-
-          {/* Approval hint */}
-          {amount && parseFloat(amount) > 0 && needsApproval(BigInt(Math.floor(parseFloat(amount) * 1e6))) && (
-            <div
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "0.7rem",
-                color: "var(--gold-dim)",
-                textAlign: "center",
-              }}
-            >
-              ⚠ Klik pertama akan approve mUSDC (exact amount)
-            </div>
-          )}
 
           {/* Side selection + deposit buttons */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -259,9 +244,7 @@ export default function ActionPanel({
               disabled={isBusy || !amount || (hasDeposit && userSide !== 1)}
               style={{ opacity: hasDeposit && userSide !== 1 ? 0.3 : 1 }}
             >
-              {isApproving
-                ? "Approving…"
-                : isDepositing || depositConfirming
+              {isDepositing || depositConfirming
                 ? "Staking…"
                 : `Stake ${nameA}`}
             </button>
@@ -271,9 +254,7 @@ export default function ActionPanel({
               disabled={isBusy || !amount || (hasDeposit && userSide !== 2)}
               style={{ opacity: hasDeposit && userSide !== 2 ? 0.3 : 1 }}
             >
-              {isApproving
-                ? "Approving…"
-                : isDepositing || depositConfirming
+              {isDepositing || depositConfirming
                 ? "Staking…"
                 : `Stake ${nameB}`}
             </button>

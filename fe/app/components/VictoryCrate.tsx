@@ -1,7 +1,9 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState } from "react";
+import { ASSET_SYMBOL, MON_DECIMALS } from "@/app/config/constants";
+import { formatMON } from "@/app/lib/formatters";
 
 interface VictoryCrateProps {
   yieldAmount: bigint;
@@ -14,7 +16,7 @@ const SPARKLE_COUNT = 12;
 
 function Sparkle({ index }: { index: number }) {
   const angle = (index / SPARKLE_COUNT) * 360;
-  const distance = 60 + Math.random() * 80;
+  const distance = 60 + ((index * 37) % 80);
   const dx = Math.cos((angle * Math.PI) / 180) * distance;
   const dy = Math.sin((angle * Math.PI) / 180) * distance;
   const colors = ["#FFD700", "#FF6B00", "#FF1744", "#448AFF", "#FFF"];
@@ -43,10 +45,8 @@ function Sparkle({ index }: { index: number }) {
 export default function VictoryCrate({ yieldAmount, isOpened, onOpen, isOpening }: VictoryCrateProps) {
   const [showReveal, setShowReveal] = useState(false);
   const [shaking, setShaking] = useState(false);
-  const formatUSDC = (val: bigint) => (Number(val) / 1e6).toLocaleString(undefined, { minimumFractionDigits: 2 });
-
   // Determine rarity based on yield
-  const yieldNum = Number(yieldAmount) / 1e6;
+  const yieldNum = Number(yieldAmount) / 10 ** MON_DECIMALS;
   const rarity = yieldNum > 500 ? "SSR" : yieldNum > 100 ? "RARE" : "COMMON";
   const rarityColors: Record<string, string> = {
     COMMON: "var(--text-secondary)",
@@ -134,7 +134,7 @@ export default function VictoryCrate({ yieldAmount, isOpened, onOpen, isOpening 
             zIndex: 1,
           }}
         >
-          +${formatUSDC(yieldAmount)}
+          +{formatMON(yieldAmount)} {ASSET_SYMBOL}
         </motion.div>
 
         <motion.div

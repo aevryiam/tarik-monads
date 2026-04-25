@@ -16,7 +16,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 ///   - Token ID = roundId (managed by TarikVault)
 ///
 /// Rarity tiers are determined off-chain when the crate is "opened" on the frontend:
-///   - Common (90%): Normal yield USDC
+///   - Common (90%): Normal yield MON
 ///   - Rare (9%): Yield + bonus token
 ///   - SSR (1%): Jackpot NFT / multiplier
 contract VictoryCrate is ERC1155, ERC1155Supply, Ownable {
@@ -31,7 +31,7 @@ contract VictoryCrate is ERC1155, ERC1155Supply, Ownable {
     /// @notice Base URI for token metadata
     string private _baseURI;
 
-    /// @notice Yield amount in USDC (6 decimals) claimable per crate per round  
+    /// @notice Yield amount in MON (18 decimals) claimable per crate per round
     mapping(uint256 roundId => uint256 yieldAmount) public crateYield;
 
     /// @notice Whether a specific crate has been opened (yield claimed)
@@ -67,7 +67,7 @@ contract VictoryCrate is ERC1155, ERC1155Supply, Ownable {
     /// @notice Called by TarikVault when a winner claims — mints a Victory Crate NFT
     /// @param winner Address of the winning user
     /// @param roundId The round/war ID
-    /// @param yieldAmount The yield USDC amount this crate is worth
+    /// @param yieldAmount The yield MON amount this crate is worth
     function mintCrate(
         address winner,
         uint256 roundId,
@@ -79,7 +79,7 @@ contract VictoryCrate is ERC1155, ERC1155Supply, Ownable {
     }
 
     /// @notice Mark crate as opened (called by TarikVault during yield distribution)
-    /// @dev Yield USDC transfer happens in TarikVault, this just tracks the "open" state
+    /// @dev Yield MON transfer happens in TarikVault, this just tracks the "open" state
     function markOpened(address owner, uint256 roundId) external onlyMinter {
         if (balanceOf(owner, roundId) == 0) revert NoCrateOwned();
         if (crateOpened[roundId][owner]) revert CrateAlreadyOpened();
