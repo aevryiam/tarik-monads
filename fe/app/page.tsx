@@ -23,7 +23,8 @@ import { useVictoryCrate } from "@/app/hooks/useVictoryCrate";
 type ViewMode = "grid" | "arena" | "lootboxes" | "leaderboard" | "admin";
 
 const MON_UNIT = BigInt(10) ** BigInt(18);
-const toMONWei = (value: number) => BigInt(Math.round(value * 1_000_000)) * (BigInt(10) ** BigInt(12));
+const toMONWei = (value: number) =>
+  BigInt(Math.round(value * 1_000_000)) * BigInt(10) ** BigInt(12);
 
 export default function Home() {
   const [view, setView] = useState<ViewMode>("grid");
@@ -37,7 +38,11 @@ export default function Home() {
   const selectedWarId = activeWarId ?? (warCount > 0 ? warCount - 1 : 0);
   const { war, tugPosition, isOpen } = useWar(selectedWarId);
   const { isWinner } = useUserDeposit(selectedWarId);
-  const { hasCrate, isOpened: crateOpened, yieldAmount: crateYield } = useVictoryCrate(selectedWarId);
+  const {
+    hasCrate,
+    isOpened: crateOpened,
+    yieldAmount: crateYield,
+  } = useVictoryCrate(selectedWarId);
 
   // Dismiss splash
   useEffect(() => {
@@ -51,13 +56,16 @@ export default function Home() {
   const [featuredWarId, setFeaturedWarId] = useState<number | null>(null);
 
   const categories = ["All", "Politik", "Crypto", "Sports", "Tech"];
-  const filteredMocks = activeCategory === "All"
-    ? MOCK_CAMPAIGNS
-    : MOCK_CAMPAIGNS.filter((c) => c.category === activeCategory);
+  const filteredMocks =
+    activeCategory === "All"
+      ? MOCK_CAMPAIGNS
+      : MOCK_CAMPAIGNS.filter((c) => c.category === activeCategory);
 
   // Featured = first hot campaign
   const featured = MOCK_CAMPAIGNS.find((c) => c.hot);
-  const rest = filteredMocks.filter((c) => c !== featured || activeCategory !== "All");
+  const rest = filteredMocks.filter(
+    (c) => c !== featured || activeCategory !== "All",
+  );
 
   const openCampaign = (campaign: MockCampaign) => {
     setSelectedMock(campaign);
@@ -80,9 +88,13 @@ export default function Home() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
             style={{
-              position: "fixed", inset: 0, zIndex: 200,
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
+              position: "fixed",
+              inset: 0,
+              zIndex: 200,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
               background: "var(--bg-primary)",
             }}
           >
@@ -91,22 +103,35 @@ export default function Home() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 160, delay: 0.1 }}
             >
-              <img src="/logo.png" alt="Tarik Logo" style={{ height: 80, objectFit: "contain" }} />
+              <img
+                src="/logo.png"
+                alt="Tarik Logo"
+                style={{ height: 80, objectFit: "contain" }}
+              />
             </motion.div>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: 160 }}
               transition={{ delay: 0.8, duration: 1.5, ease: "easeInOut" }}
               style={{
-                height: 2, marginTop: 16, borderRadius: 2,
-                background: "linear-gradient(90deg, var(--red-main), var(--gold), var(--blue-main))",
+                height: 2,
+                marginTop: 16,
+                borderRadius: 2,
+                background:
+                  "linear-gradient(90deg, var(--red-main), var(--gold), var(--blue-main))",
               }}
             />
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
               transition={{ delay: 1.5 }}
-              style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-dim)", marginTop: 12, letterSpacing: "0.15em" }}
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.7rem",
+                color: "var(--text-dim)",
+                marginTop: 12,
+                letterSpacing: "0.15em",
+              }}
             >
               LOSSLESS YIELD WARS
             </motion.p>
@@ -116,7 +141,14 @@ export default function Home() {
 
       <Navbar activeView={view} onViewChange={(v) => setView(v as ViewMode)} />
 
-      <main style={{ paddingTop: 80, maxWidth: 1400, margin: "0 auto", padding: "80px 32px 48px" }}>
+      <main
+        style={{
+          paddingTop: 80,
+          maxWidth: 1400,
+          margin: "0 auto",
+          padding: "80px 32px 48px",
+        }}
+      >
         {/* Grid view — Polymarket-style */}
         {view === "grid" && (
           <motion.div
@@ -126,36 +158,62 @@ export default function Home() {
           >
             {/* Header */}
             <div style={{ marginBottom: 24, paddingTop: 16 }}>
-              <h1 style={{
-                fontFamily: "var(--font-display)", fontSize: "2.2rem",
-                letterSpacing: "0.06em", lineHeight: 1.1, marginBottom: 6,
-              }}>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "2.2rem",
+                  letterSpacing: "0.06em",
+                  lineHeight: 1.1,
+                  marginBottom: 6,
+                }}
+              >
                 Yield Wars
               </h1>
-              <p style={{
-                fontFamily: "var(--font-body)", fontSize: "0.9rem",
-                color: "var(--text-secondary)", maxWidth: 460,
-              }}>
-                Stake on your champion. Principal is safe — winner takes all yield.
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.9rem",
+                  color: "var(--text-secondary)",
+                  maxWidth: 460,
+                }}
+              >
+                Stake on your champion. Principal is safe — winner takes all
+                yield.
               </p>
             </div>
 
             {/* Category tabs */}
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              marginBottom: 20, flexWrap: "wrap", gap: 8,
-            }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 20,
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
               <div style={{ display: "flex", gap: 4 }}>
                 {categories.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
                     style={{
-                      fontFamily: "var(--font-body)", fontSize: "0.8rem",
-                      padding: "5px 14px", borderRadius: 6, border: "none",
-                      cursor: "pointer", transition: "all 0.15s",
-                      background: activeCategory === cat ? "rgba(255,255,255,0.1)" : "transparent",
-                      color: activeCategory === cat ? "var(--text-primary)" : "var(--text-dim)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.8rem",
+                      padding: "5px 14px",
+                      borderRadius: 6,
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      background:
+                        activeCategory === cat
+                          ? "rgba(255,255,255,0.1)"
+                          : "transparent",
+                      color:
+                        activeCategory === cat
+                          ? "var(--text-primary)"
+                          : "var(--text-dim)",
                       fontWeight: activeCategory === cat ? 600 : 400,
                     }}
                   >
@@ -168,18 +226,44 @@ export default function Home() {
             {/* On-chain wars (if any) */}
             {activeWars.length > 0 && (
               <div style={{ marginBottom: 24 }}>
-                <div style={{
-                  fontFamily: "var(--font-mono)", fontSize: "0.65rem",
-                  letterSpacing: "0.15em", textTransform: "uppercase",
-                  color: "var(--text-dim)", marginBottom: 10,
-                  display: "flex", alignItems: "center", gap: 6,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4caf50", display: "inline-block" }} />
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: "var(--text-dim)",
+                    marginBottom: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#4caf50",
+                      display: "inline-block",
+                    }}
+                  />
                   ON-CHAIN CAMPAIGNS
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 16 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(340px, 1fr))",
+                    gap: 16,
+                  }}
+                >
                   {activeWars.map((w) => (
-                    <OnChainWarCard key={w.warId} warId={w.warId} onClick={() => openOnChainWar(w.warId)} />
+                    <OnChainWarCard
+                      key={w.warId}
+                      warId={w.warId}
+                      onClick={() => openOnChainWar(w.warId)}
+                    />
                   ))}
                 </div>
               </div>
@@ -188,34 +272,53 @@ export default function Home() {
             {/* Featured campaign */}
             {activeCategory === "All" && (
               <div style={{ marginBottom: 20 }}>
-                <div style={{
-                  fontFamily: "var(--font-mono)", fontSize: "0.65rem",
-                  letterSpacing: "0.15em", textTransform: "uppercase",
-                  color: "var(--text-dim)", marginBottom: 10,
-                  display: "flex", alignItems: "center", gap: 6,
-                }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: "var(--text-dim)",
+                    marginBottom: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
                   <Flame size={14} color="var(--red-glow)" /> TRENDING
                 </div>
                 {featuredWarId !== null ? (
-                  <OnChainWarCard warId={featuredWarId} onClick={() => openOnChainWar(featuredWarId)} featured />
+                  <OnChainWarCard
+                    warId={featuredWarId}
+                    onClick={() => openOnChainWar(featuredWarId)}
+                    featured
+                  />
                 ) : featured ? (
-                  <CampaignCard {...featured} onClick={() => openCampaign(featured)} featured />
+                  <CampaignCard
+                    {...featured}
+                    onClick={() => openCampaign(featured)}
+                    featured
+                  />
                 ) : null}
               </div>
             )}
 
             {/* Campaign grid */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-              gap: 16,
-            }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+                gap: 16,
+              }}
+            >
               {rest.map((c) => (
-                <CampaignCard key={c.id} {...c} onClick={() => openCampaign(c)} />
+                <CampaignCard
+                  key={c.id}
+                  {...c}
+                  onClick={() => openCampaign(c)}
+                />
               ))}
             </div>
-
-
           </motion.div>
         )}
 
@@ -228,23 +331,39 @@ export default function Home() {
           >
             {/* Back button */}
             <button
-              onClick={() => { setView("grid"); setSelectedMock(null); }}
+              onClick={() => {
+                setView("grid");
+                setSelectedMock(null);
+              }}
               style={{
-                fontFamily: "var(--font-body)", fontSize: "0.85rem",
-                color: "var(--text-dim)", background: "none", border: "none",
-                cursor: "pointer", padding: "8px 0", marginBottom: 12,
-                display: "flex", alignItems: "center", gap: 6,
+                fontFamily: "var(--font-body)",
+                fontSize: "0.85rem",
+                color: "var(--text-dim)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "8px 0",
+                marginBottom: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
                 transition: "color 0.15s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-dim)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "var(--text-primary)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--text-dim)")
+              }
             >
               ← Back to Markets
             </button>
 
             {/* If viewing a mock campaign */}
             {selectedMock && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
                 <TugOfWarArena
                   nameA={selectedMock.nameA}
                   nameB={selectedMock.nameB}
@@ -255,18 +374,41 @@ export default function Home() {
                   status={0}
                   winningSide={0}
                   yieldBps={selectedMock.yieldBps}
-                  totalDeposits={toMONWei(selectedMock.tvlA + selectedMock.tvlB)}
+                  totalDeposits={toMONWei(
+                    selectedMock.tvlA + selectedMock.tvlB,
+                  )}
                 />
-                <div style={{
-                  padding: 24, background: "var(--bg-card)",
-                  border: "1px solid rgba(255,215,0,0.15)", borderRadius: 12,
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", letterSpacing: "0.1em", color: "var(--text-dim)", marginBottom: 8 }}>
+                <div
+                  style={{
+                    padding: 24,
+                    background: "var(--bg-card)",
+                    border: "1px solid rgba(255,215,0,0.15)",
+                    borderRadius: 12,
+                    textAlign: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "1.3rem",
+                      letterSpacing: "0.1em",
+                      color: "var(--text-dim)",
+                      marginBottom: 8,
+                    }}
+                  >
                     DEMO CAMPAIGN
                   </div>
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem", color: "var(--text-dim)", maxWidth: 400, margin: "0 auto" }}>
-                    This is a mock campaign for preview. Create a real on-chain campaign via the Admin panel to start playing.
+                  <p
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.85rem",
+                      color: "var(--text-dim)",
+                      maxWidth: 400,
+                      margin: "0 auto",
+                    }}
+                  >
+                    This is a mock campaign for preview. Create a real on-chain
+                    campaign via the Admin panel to start playing.
                   </p>
                 </div>
               </div>
@@ -274,7 +416,9 @@ export default function Home() {
 
             {/* If viewing an on-chain war */}
             {!selectedMock && hasWar && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
                 <TugOfWarArena
                   nameA={war.nameA}
                   nameB={war.nameB}
@@ -288,7 +432,13 @@ export default function Home() {
                   totalDeposits={war.totalDeposits}
                 />
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 16,
+                  }}
+                >
                   <WarInfo
                     warId={selectedWarId}
                     nameA={war.nameA}
@@ -337,40 +487,68 @@ export default function Home() {
             style={{ padding: "40px 0" }}
           >
             <div style={{ textAlign: "center", marginBottom: 40 }}>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: "var(--gold)", letterSpacing: "0.1em" }}>
+              <h2
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "2.5rem",
+                  color: "var(--gold)",
+                  letterSpacing: "0.1em",
+                }}
+              >
                 YOUR LOOTBOXES
               </h2>
-              <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  color: "var(--text-secondary)",
+                }}
+              >
                 Unseal the crates you have won to claim your yield.
               </p>
             </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 32 }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: 32,
+              }}
+            >
               {/* Show actual un-opened crates if any */}
-              {warCount > 0 && Array.from({ length: warCount }).map((_, i) => {
-                if (i === selectedWarId && hasCrate && !crateOpened) {
-                   return (
-                     <div key={i} style={{ width: 300 }}>
+              {warCount > 0 &&
+                Array.from({ length: warCount }).map((_, i) => {
+                  if (i === selectedWarId && hasCrate && !crateOpened) {
+                    return (
+                      <div key={i} style={{ width: 300 }}>
                         <VictoryCrate
                           yieldAmount={crateYield || BigInt(0)}
                           isOpened={false}
                           onOpen={() => {}}
                           isOpening={false}
                         />
-                     </div>
-                   );
-                }
-                return null;
-              })}
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
 
               {/* Show a demo crate for the user to try if they have none */}
-              {(!hasCrate) && (
+              {!hasCrate && (
                 <div style={{ width: 300 }}>
-                  <div style={{ textAlign: "center", marginBottom: 12, fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--text-dim)" }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      marginBottom: 12,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.8rem",
+                      color: "var(--text-dim)",
+                    }}
+                  >
                     Demo Crate (Try it!)
                   </div>
                   <VictoryCrate
-                    yieldAmount={BigInt(25) * MON_UNIT}
+                    yieldAmount={BigInt(1) * MON_UNIT}
                     isOpened={false}
                     onOpen={() => {}}
                     isOpening={false}
@@ -381,11 +559,8 @@ export default function Home() {
           </motion.div>
         )}
 
-
         {/* Leaderboard View */}
-        {view === "leaderboard" && (
-          <Leaderboard />
-        )}
+        {view === "leaderboard" && <Leaderboard />}
 
         {/* Admin View */}
         {view === "admin" && (
@@ -395,10 +570,22 @@ export default function Home() {
             style={{ padding: "40px 0" }}
           >
             <div style={{ textAlign: "center", marginBottom: 40 }}>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: "var(--gold)", letterSpacing: "0.1em" }}>
+              <h2
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "2.5rem",
+                  color: "var(--gold)",
+                  letterSpacing: "0.1em",
+                }}
+              >
                 ADMIN DASHBOARD
               </h2>
-              <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  color: "var(--text-secondary)",
+                }}
+              >
                 Manage campaigns, resolve wars, and control the yield flow.
               </p>
             </div>
@@ -409,16 +596,35 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <footer style={{
-          marginTop: 48, paddingTop: 20,
-          borderTop: "1px solid var(--border-subtle)",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)" }}>
+        <footer
+          style={{
+            marginTop: 48,
+            paddingTop: 20,
+            borderTop: "1px solid var(--border-subtle)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.65rem",
+              color: "var(--text-dim)",
+            }}
+          >
             TARIK · Lossless Yield Wars
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)" }}>
-            Built on <span style={{ color: "var(--text-secondary)" }}>Monad</span> · {new Date().getFullYear()}
+          <div
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.65rem",
+              color: "var(--text-dim)",
+            }}
+          >
+            Built on{" "}
+            <span style={{ color: "var(--text-secondary)" }}>Monad</span> ·{" "}
+            {new Date().getFullYear()}
           </div>
         </footer>
       </main>
@@ -427,7 +633,15 @@ export default function Home() {
 }
 
 // Mini component to render on-chain war as a card
-function OnChainWarCard({ warId, onClick, featured }: { warId: number; onClick: () => void; featured?: boolean }) {
+function OnChainWarCard({
+  warId,
+  onClick,
+  featured,
+}: {
+  warId: number;
+  onClick: () => void;
+  featured?: boolean;
+}) {
   const [nowSec, setNowSec] = useState(0);
 
   const { data: war } = useReadContract({
