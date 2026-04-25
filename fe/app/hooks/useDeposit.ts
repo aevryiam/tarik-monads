@@ -3,7 +3,7 @@
 // ============================================================================
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseUnits } from "viem";
@@ -55,13 +55,13 @@ export function useDeposit(warId: number): UseDepositResult {
     useWaitForTransactionReceipt({ hash: depositTxHash });
 
   // State internal: simpan args untuk deposit setelah approve selesai
-  let pendingDepositArgs: { side: 1 | 2; amount: bigint } | null = null;
+  const pendingDepositArgs = useRef<{ side: 1 | 2; amount: bigint } | null>(null);
 
   // Ketika approve sukses → lanjut deposit otomatis
   useEffect(() => {
-    if (approveSuccess && pendingDepositArgs) {
-      const { side, amount } = pendingDepositArgs;
-      pendingDepositArgs = null;
+    if (approveSuccess && pendingDepositArgs.current) {
+      const { side, amount } = pendingDepositArgs.current;
+      pendingDepositArgs.current = null;
       writeDeposit({
         address: ADDRESSES.tarikVault,
         abi: TARIK_VAULT_ABI,
@@ -98,7 +98,7 @@ export function useDeposit(warId: number): UseDepositResult {
       // Exact approve: cek apakah allowance saat ini mencukupi
       if (currentAllowance < amount) {
         // Simpan deposit args untuk dieksekusi setelah approve
-        pendingDepositArgs = { side, amount };
+        pendingDepositArgs.current = { side, amount };
 
         const toastId = toastPending("Menunggu persetujuan mUSDC…");
         writeApprove(
@@ -112,7 +112,7 @@ export function useDeposit(warId: number): UseDepositResult {
             onError: (err) => {
               toastDismiss(toastId);
               toastError(parseContractError(err));
-              pendingDepositArgs = null;
+              pendingDepositArgs.current = null;
             },
             onSuccess: () => {
               toastDismiss(toastId);
