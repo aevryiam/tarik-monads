@@ -9,12 +9,12 @@
 export const ADDRESSES = {
   victoryCrate: (
     process.env.NEXT_PUBLIC_VICTORY_CRATE_ADDRESS ||
-    "0xA048f32a432F6CA02321227Ae36Fa20e114c1661"
+    "0xB0db5f8fC40fb199Db8597c68feceFa586088CbE"
   ) as `0x${string}`,
 
   tarikVault: (
     process.env.NEXT_PUBLIC_TARIK_VAULT_ADDRESS ||
-    "0xa953E73F030b1E533DBf8d063eB740df451d111D"
+    "0x6604f0429E9f9FE0b57Ae0F0167E2caE2c5f2cc3"
   ) as `0x${string}`,
 } as const;
 
