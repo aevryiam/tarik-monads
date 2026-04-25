@@ -4,6 +4,7 @@ import { useAccount, useConnect, useDisconnect, useReadContract } from "wagmi";
 import { ADDRESSES, MOCK_USDC_ABI, OWNER_ADDRESS } from "@/app/config/contracts";
 import { formatUnits } from "viem";
 import { motion } from "framer-motion";
+import { PackageOpen } from "lucide-react";
 import { injected } from "wagmi/connectors";
 import { isPrivyEnabled } from "./Providers";
 
@@ -66,30 +67,18 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
           padding: "8px 16px",
           width: "90%",
           maxWidth: 1100,
-          background: "rgba(30, 41, 59, 0.7)", // Slate 800 with transparency
+          background: "rgba(36, 39, 58, 0.7)", // Matches Catppuccin surface
           backdropFilter: "blur(20px)",
           border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 40, // Capsule shape
+          borderRadius: 40, 
           boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
         }}
       >
         {/* Left: Logo + nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <div
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "1.8rem",
-              letterSpacing: "0.08em",
-              lineHeight: 1,
-              cursor: "pointer",
-              marginLeft: 8,
-            }}
-          >
-            <span style={{ color: "var(--red-main)" }}>TA</span>
-            <span style={{ color: "var(--text-primary)" }}>R</span>
-            <span style={{ color: "var(--blue-main)" }}>IK</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => onViewChange && onViewChange("grid")}>
+            <img src="/logo.png" alt="Tarik Logo" style={{ height: 32, objectFit: "contain" }} />
           </div>
-
           <div style={{ display: "flex", gap: 4 }}>
             {["Markets", "Leaderboard", "Lootboxes"].map((label) => {
               const viewValue = label === "Markets" ? "grid" : label.toLowerCase();
@@ -99,14 +88,15 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
                   key={label}
                   onClick={() => onViewChange && onViewChange(viewValue)}
                   style={{
+                    display: "flex", alignItems: "center", gap: 6,
                     fontFamily: "var(--font-body)", fontSize: "0.85rem", fontWeight: 600,
-                    color: isActive ? "var(--text-primary)" : "var(--text-dim)",
-                    background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+                    color: isActive ? "var(--blue-main)" : "var(--text-secondary)",
+                    background: isActive ? "rgba(59, 130, 246, 0.1)" : "transparent",
                     border: "none", padding: "8px 16px", borderRadius: 20,
                     cursor: "pointer", transition: "all 0.2s",
                   }}
                 >
-                  {label === "Lootboxes" ? "🎁 Lootboxes" : label}
+                  {label === "Lootboxes" ? <><PackageOpen size={16} /> Lootboxes</> : label}
                 </button>
               );
             })}
@@ -121,9 +111,9 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
                 fontFamily: "var(--font-mono)", fontSize: "0.75rem",
                 color: "var(--text-secondary)",
                 padding: "6px 12px",
-                background: "rgba(0,0,0,0.2)",
+                background: "rgba(0,0,0,0.03)",
                 borderRadius: 20,
-                border: "1px solid rgba(255,255,255,0.05)",
+                border: "1px solid rgba(0,0,0,0.05)",
               }}
             >
               <span style={{ color: "var(--gold)" }}>
@@ -149,9 +139,9 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
               style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "6px 14px",
-                background: "rgba(255,255,255,0.08)",
+                background: "rgba(0,0,0,0.03)",
                 borderRadius: 20,
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: "1px solid rgba(0,0,0,0.05)",
                 cursor: "pointer", transition: "all 0.2s",
               }}
               onClick={handleLogout}

@@ -137,19 +137,11 @@ export default function CampaignCard({
           </span>
           {hot && (
             <span style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "3px 8px",
-              borderRadius: 4,
-              fontSize: "0.6rem",
-              fontFamily: "var(--font-mono)",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              background: "rgba(230,57,70,0.2)",
-              backdropFilter: "blur(4px)",
-              color: "var(--red-light)",
-              border: "1px solid rgba(230,57,70,0.3)",
+              display: "flex", alignItems: "center", gap: 4,
+              padding: "3px 8px", borderRadius: 4, fontSize: "0.6rem",
+              fontFamily: "var(--font-mono)", fontWeight: 700,
+              background: "var(--red-light)",
+              color: "var(--red-main)",
             }}>
               <icons.Flame size={10} /> HOT
             </span>
@@ -249,8 +241,8 @@ export default function CampaignCard({
           }}>
             <motion.div
               initial={{ width: "50%" }}
-              animate={{ width: `${animatedPctA}%` }}
-              transition={{ type: "spring", stiffness: 60, damping: 15 }}
+              animate={{ width: [`${animatedPctA}%`, `${animatedPctA + 1}%`, `${animatedPctA - 0.5}%`, `${animatedPctA}%`] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
               style={{
                 height: "100%",
                 background: isClose
@@ -285,8 +277,8 @@ export default function CampaignCard({
             {isClose && (
               <motion.div
                 initial={{ left: "50%" }}
-                animate={{ left: `${animatedPctA}%` }}
-                transition={{ type: "spring", stiffness: 60, damping: 15 }}
+                animate={{ left: [`${animatedPctA}%`, `${animatedPctA + 1}%`, `${animatedPctA - 0.5}%`, `${animatedPctA}%`] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                 style={{
                    position: 'absolute',
                    top: '50%',
@@ -330,33 +322,59 @@ export default function CampaignCard({
             fontFamily: "var(--font-mono)",
             fontSize: "0.65rem",
             color: isClose ? "var(--gold)" : "var(--text-dim)",
+            display: "flex",
+            alignItems: "center",
+            gap: 4
           }}>
-            ⏱ {timeLeft}
+            <icons.Timer size={10} /> {timeLeft}
           </span>
         </div>
 
         {/* Featured Bet Simulation */}
         {featured && (
           <div style={{
-            marginTop: 12,
-            padding: "8px 12px",
-            background: "rgba(255,255,255,0.03)",
-            borderRadius: 8,
-            border: "1px dashed var(--border-subtle)",
+            marginTop: 16,
+            padding: "12px 16px",
+            background: "var(--bg-primary)",
+            borderRadius: 12,
+            border: "1px dashed var(--border-medium)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center"
           }}>
-             <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-dim)"}}>
-               $10 bet pays:
-             </span>
-             <div style={{ display: "flex", gap: 12 }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--red-light)"}}>
-                  {nameA}: <strong style={{color:"white"}}>${calcReturn(tvlA)}</strong>
-                </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--blue-light)"}}>
-                  {nameB}: <strong style={{color:"white"}}>${calcReturn(tvlB)}</strong>
-                </span>
+             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+               <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)", textTransform: "uppercase" }}>{nameA} return</span>
+               <motion.span 
+                 animate={{ scale: [1, 1.05, 0.98, 1], color: ["var(--red-main)", "var(--red-glow)", "var(--red-main)", "var(--red-main)"] }}
+                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                 style={{ fontFamily: "var(--font-mono)", fontSize: "1rem", color: "var(--red-main)", fontWeight: 700, display: "inline-block" }}
+               >
+                 ${calcReturn(tvlA)}
+               </motion.span>
+             </div>
+             
+             <div style={{ 
+               fontFamily: "var(--font-display)", 
+               fontSize: "1rem", 
+               color: "var(--text-secondary)", 
+               letterSpacing: "0.05em", 
+               background: "var(--bg-secondary)",
+               padding: "4px 12px",
+               borderRadius: 20,
+               border: "1px solid var(--border-subtle)"
+             }}>
+               $10 BET PAYS
+             </div>
+             
+             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+               <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)", textTransform: "uppercase" }}>{nameB} return</span>
+               <motion.span 
+                 animate={{ scale: [1, 0.98, 1.05, 1], color: ["var(--blue-main)", "var(--blue-main)", "var(--blue-glow)", "var(--blue-main)"] }}
+                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 0.5 }}
+                 style={{ fontFamily: "var(--font-mono)", fontSize: "1rem", color: "var(--blue-main)", fontWeight: 700, display: "inline-block" }}
+               >
+                 ${calcReturn(tvlB)}
+               </motion.span>
              </div>
           </div>
         )}

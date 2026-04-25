@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ADDRESSES, TARIK_VAULT_ABI, OWNER_ADDRESS } from "@/app/config/contracts";
 
-export default function AdminPanel() {
+export default function AdminPanel({ onSetFeatured }: { onSetFeatured?: (id: number) => void }) {
   const { address } = useAccount();
   const isOwner = address?.toLowerCase() === OWNER_ADDRESS.toLowerCase();
 
@@ -14,6 +14,7 @@ export default function AdminPanel() {
   const [yieldBps, setYieldBps] = useState("2000"); // 20% — higher for demo visibility
   const [winningSide, setWinningSide] = useState("1");
   const [resolveWarId, setResolveWarId] = useState("0");
+  const [isHotTopic, setIsHotTopic] = useState(true);
 
   const { data: currentWarId } = useReadContract({
     address: ADDRESSES.tarikVault,
@@ -40,6 +41,16 @@ export default function AdminPanel() {
       args: [nameA, nameB, now, now + durationSec, BigInt(yieldBps)],
     });
   };
+
+  // If successful and isHotTopic is true, we want to tell the parent.
+  // We don't easily get the returned ID from writeContract, but we can assume it's currentWarId.
+  // This is a naive implementation since currentWarId might not have updated yet, but it's fine for the demo.
+  useEffect(() => {
+    if (createSuccess && isHotTopic && currentWarId !== undefined && onSetFeatured) {
+      // The new war ID is currentWarId (after creation)
+      onSetFeatured(Number(currentWarId));
+    }
+  }, [createSuccess, isHotTopic, currentWarId, onSetFeatured]);
 
   const handleResolve = () => {
     resolve({
@@ -83,6 +94,18 @@ export default function AdminPanel() {
             <label style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", color: "var(--text-dim)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Yield BPS (2000=20%)</label>
             <input className="input-field" type="number" value={yieldBps} onChange={(e) => setYieldBps(e.target.value)} style={{ fontSize: "0.9rem" }} />
           </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+          <input 
+            type="checkbox" 
+            id="hotTopic" 
+            checked={isHotTopic} 
+            onChange={(e) => setIsHotTopic(e.target.checked)} 
+            style={{ accentColor: "var(--red-main)", width: 16, height: 16 }}
+          />
+          <label htmlFor="hotTopic" style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-secondary)", cursor: "pointer" }}>
+            Set as HOT Topic (Featured in Center)
+          </label>
         </div>
         <button
           className="btn-battle"

@@ -12,6 +12,7 @@ import VictoryCrate from "@/app/components/VictoryCrate";
 import FaucetButton from "@/app/components/FaucetButton";
 import AdminPanel from "@/app/components/AdminPanel";
 import CampaignCard from "@/app/components/CampaignCard";
+import Leaderboard from "@/app/components/Leaderboard";
 import { ADDRESSES, TARIK_VAULT_ABI, VICTORY_CRATE_ABI } from "@/app/config/contracts";
 import { MOCK_CAMPAIGNS, type MockCampaign } from "@/app/config/mockData";
 
@@ -107,6 +108,8 @@ export default function Home() {
   const hasCrate = crateBalance !== undefined && crateBalance > BigInt(0);
   const isWinner = war && Number(war.status) === 1 && userDeposit && userDeposit.side === Number(war.winningSide);
 
+  const [featuredWarId, setFeaturedWarId] = useState<number | null>(null);
+
   const categories = ["All", "Politik", "Crypto", "Sports", "Tech"];
   const filteredMocks = activeCategory === "All"
     ? MOCK_CAMPAIGNS
@@ -147,14 +150,8 @@ export default function Home() {
               initial={{ scale: 0.3, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 160, delay: 0.1 }}
-              style={{
-                fontFamily: "var(--font-display)", fontSize: "5rem",
-                letterSpacing: "0.25em", lineHeight: 1,
-              }}
             >
-              <span style={{ color: "var(--red-main)" }}>TA</span>
-              <span style={{ color: "var(--text-primary)" }}>R</span>
-              <span style={{ color: "var(--blue-main)" }}>IK</span>
+              <img src="/logo.png" alt="Tarik Logo" style={{ height: 80, objectFit: "contain" }} />
             </motion.div>
             <motion.div
               initial={{ width: 0 }}
@@ -250,7 +247,7 @@ export default function Home() {
             )}
 
             {/* Featured campaign */}
-            {activeCategory === "All" && featured && (
+            {activeCategory === "All" && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{
                   fontFamily: "var(--font-mono)", fontSize: "0.65rem",
@@ -260,7 +257,11 @@ export default function Home() {
                 }}>
                   <Flame size={14} color="var(--red-glow)" /> TRENDING
                 </div>
-                <CampaignCard {...featured} onClick={() => openCampaign(featured)} featured />
+                {featuredWarId !== null ? (
+                  <OnChainWarCard warId={featuredWarId} onClick={() => openOnChainWar(featuredWarId)} featured />
+                ) : featured ? (
+                  <CampaignCard {...featured} onClick={() => openCampaign(featured)} featured />
+                ) : null}
               </div>
             )}
 
@@ -277,7 +278,7 @@ export default function Home() {
 
             {/* Admin panel */}
             <div style={{ marginTop: 32 }}>
-              <AdminPanel />
+              <AdminPanel onSetFeatured={setFeaturedWarId} />
             </div>
           </motion.div>
         )}
@@ -391,20 +392,6 @@ export default function Home() {
             )}
           </motion.div>
         )}
-
-        {/* Footer */}
-        <footer style={{
-          marginTop: 48, paddingTop: 20,
-          borderTop: "1px solid var(--border-subtle)",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)" }}>
-            TARIK · Lossless Yield Wars
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)" }}>
-            Built on <span style={{ color: "var(--text-secondary)" }}>Monad</span> · {new Date().getFullYear()}
-          </div>
-        </footer>
         {/* Lootboxes View */}
         {view === "lootboxes" && (
           <motion.div
@@ -457,13 +444,33 @@ export default function Home() {
             </div>
           </motion.div>
         )}
+
+
+        {/* Leaderboard View */}
+        {view === "leaderboard" && (
+          <Leaderboard />
+        )}
+
+        {/* Footer */}
+        <footer style={{
+          marginTop: 48, paddingTop: 20,
+          borderTop: "1px solid var(--border-subtle)",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)" }}>
+            TARIK · Lossless Yield Wars
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)" }}>
+            Built on <span style={{ color: "var(--text-secondary)" }}>Monad</span> · {new Date().getFullYear()}
+          </div>
+        </footer>
       </main>
     </div>
   );
 }
 
 // Mini component to render on-chain war as a card
-function OnChainWarCard({ warId, onClick }: { warId: number; onClick: () => void }) {
+function OnChainWarCard({ warId, onClick, featured }: { warId: number; onClick: () => void; featured?: boolean }) {
   const { data: war } = useReadContract({
     address: ADDRESSES.tarikVault,
     abi: TARIK_VAULT_ABI,
@@ -500,6 +507,7 @@ function OnChainWarCard({ warId, onClick }: { warId: number; onClick: () => void
       participants={Number(war.participantCount)}
       endTime={Number(war.endTime)}
       yieldBps={Number(war.mockYieldBps)}
+      featured={featured}
       hot={status === 0}
       onClick={onClick}
     />

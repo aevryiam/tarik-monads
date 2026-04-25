@@ -5,9 +5,9 @@
 export const CHAIN_ID = 10143;
 
 export const ADDRESSES = {
-  mockUSDC: "0x46bb4853279adc27223fcd944655833bc8919ca7" as const,
-  victoryCrate: "0xd672b4c3939d2b5a0cddd3aad5b1f2a1686c5ed7" as const,
-  tarikVault: "0x919d409142179d8df2acfca9b0f3c3643e733446" as const,
+  mockUSDC: (process.env.NEXT_PUBLIC_MOCK_USDC_ADDRESS || "0x46bb4853279adc27223fcd944655833bc8919ca7") as `0x${string}`,
+  victoryCrate: (process.env.NEXT_PUBLIC_VICTORY_CRATE_ADDRESS || "0xd672b4c3939d2b5a0cddd3aad5b1f2a1686c5ed7") as `0x${string}`,
+  tarikVault: (process.env.NEXT_PUBLIC_TARIK_VAULT_ADDRESS || "0x919d409142179d8df2acfca9b0f3c3643e733446") as `0x${string}`,
 } as const;
 
 // Owner / deployer — used for admin check on the frontend

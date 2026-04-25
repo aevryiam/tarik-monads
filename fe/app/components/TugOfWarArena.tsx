@@ -237,8 +237,8 @@ export default function TugOfWarArena(props: TugOfWarArenaProps) {
           >
             {/* Red side */}
             <motion.div
-              animate={{ width: `${percentA}%` }}
-              transition={{ type: "spring", stiffness: 80, damping: 20 }}
+              animate={{ width: [`${percentA}%`, `${percentA + 1}%`, `${percentA - 0.5}%`, `${percentA}%`] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
               style={{
                 height: "100%",
                 background: `linear-gradient(90deg, var(--red-dark), var(--red-main))`,
@@ -248,8 +248,8 @@ export default function TugOfWarArena(props: TugOfWarArenaProps) {
             />
             {/* Knot indicator */}
             <motion.div
-              animate={{ left: `${percentA}%` }}
-              transition={{ type: "spring", stiffness: 80, damping: 20 }}
+              animate={{ left: [`${percentA}%`, `${percentA + 1}%`, `${percentA - 0.5}%`, `${percentA}%`] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
               style={{
                 position: "absolute",
                 top: "50%",
