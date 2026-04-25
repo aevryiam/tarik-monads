@@ -1,7 +1,8 @@
 "use client";
 
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http } from "wagmi";
 import { defineChain } from "viem";
+import { createConfig } from "@privy-io/wagmi";
 
 export const monadTestnet = defineChain({
   id: 10143,
@@ -16,9 +17,10 @@ export const monadTestnet = defineChain({
   testnet: true,
 });
 
-export const wagmiConfig = getDefaultConfig({
-  appName: "TARIK — Yield Wars",
-  projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || "demo",
+export const wagmiConfig = createConfig({
   chains: [monadTestnet],
+  transports: {
+    [monadTestnet.id]: http(),
+  },
   ssr: true,
 });
