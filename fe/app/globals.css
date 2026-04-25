@@ -2,31 +2,31 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0b0c10;
-  --bg-secondary: #12141c;
-  --bg-card: #181a25;
-  --bg-card-hover: #1f2233;
+  --bg-primary: #24273a;
+  --bg-secondary: #181825;
+  --bg-card: #363a4f;
+  --bg-card-hover: #494d64;
 
-  --red-main: #e63946;
-  --red-glow: #ff1744;
-  --red-light: #ff6b6b;
-  --red-dark: #991f2b;
+  --red-main: #ed8796;
+  --red-glow: #ee99a0;
+  --red-light: #f4dbd6;
+  --red-dark: #8c414f;
 
-  --blue-main: #1d6fff;
-  --blue-glow: #448aff;
-  --blue-light: #6ba4ff;
-  --blue-dark: #0d47a1;
+  --blue-main: #8aadf4;
+  --blue-glow: #7dc4e4;
+  --blue-light: #b7bdf8;
+  --blue-dark: #3b4261;
 
-  --gold: #ffd700;
-  --gold-dim: #b8860b;
+  --gold: #eed49f;
+  --gold-dim: #f5a97f;
 
-  --text-primary: #e8e6e3;
-  --text-secondary: #9e9a94;
-  --text-dim: #5c5955;
-  --text-accent: #f0ece6;
+  --text-primary: #cad3f5;
+  --text-secondary: #b8c0e0;
+  --text-dim: #8087a2;
+  --text-accent: #f4dbd6;
 
-  --border-subtle: rgba(255,255,255,0.06);
-  --border-medium: rgba(255,255,255,0.12);
+  --border-subtle: rgba(202, 211, 245, 0.08);
+  --border-medium: rgba(202, 211, 245, 0.15);
 
   --font-display: 'Bebas Neue', sans-serif;
   --font-mono: 'Space Mono', monospace;

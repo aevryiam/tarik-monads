@@ -25,8 +25,8 @@ function PullingFigure({ side, name, pct, isWinner }: { side: "left" | "right"; 
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: side === "left" ? -200 : 200, rotate: side === "left" ? -20 : 20 }}
-      animate={{ opacity: 1, x: 0, rotate: pull ? leanAngle : 0 }}
+      initial={{ opacity: 0, x: side === "left" ? -200 : 200 }}
+      animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", stiffness: 80, damping: 12, delay: side === "left" ? 0.3 : 0.5 }}
       style={{
         display: "flex",
@@ -36,60 +36,30 @@ function PullingFigure({ side, name, pct, isWinner }: { side: "left" | "right"; 
         filter: isWinner ? `drop-shadow(0 0 20px ${glowColor})` : "none",
       }}
     >
-      {/* Character body */}
-      <motion.svg
-        width="120"
-        height="160"
-        viewBox="0 0 120 160"
-        animate={pull ? { x: [0, side === "left" ? -6 : 6, 0] } : {}}
-        transition={{ repeat: Infinity, duration: 0.4, ease: "easeInOut" }}
+      {/* Avatar instead of stickman */}
+      <motion.div
+        animate={pull ? { x: side === "left" ? [-8, 0, -8] : [8, 0, 8], rotate: leanAngle } : {}}
+        transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+        style={{
+          width: 130,
+          height: 130,
+          borderRadius: "50%",
+          background: `radial-gradient(circle at center, ${color}33 0%, transparent 80%)`,
+          border: `3px solid ${color}`,
+          overflow: "hidden",
+          boxShadow: `0 0 25px ${glowColor}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 8,
+        }}
       >
-        {/* Head */}
-        <circle cx="60" cy="30" r="22" fill={color} opacity="0.9" />
-        {/* Eyes */}
-        <circle cx="52" cy="26" r="3" fill="#fff" />
-        <circle cx="68" cy="26" r="3" fill="#fff" />
-        <circle cx={pull ? 50 : 53} cy="26" r="1.5" fill="#111" />
-        <circle cx={pull ? 66 : 69} cy="26" r="1.5" fill="#111" />
-        {/* Mouth - determined / grinning */}
-        {pull ? (
-          <path d="M50 38 Q60 44 70 38" stroke="#fff" strokeWidth="2" fill="none" />
-        ) : (
-          <line x1="50" y1="38" x2="70" y2="38" stroke="#fff" strokeWidth="2" />
-        )}
-        {/* Body */}
-        <rect x="45" y="52" width="30" height="45" rx="6" fill={color} opacity="0.85" />
-        {/* Arms pulling rope */}
-        <motion.line
-          x1={side === "left" ? 45 : 75}
-          y1="65"
-          x2={side === "left" ? 10 : 110}
-          y2="58"
-          stroke={color}
-          strokeWidth="6"
-          strokeLinecap="round"
-          animate={pull ? { x2: side === "left" ? [10, 5, 10] : [110, 115, 110] } : {}}
-          transition={{ repeat: Infinity, duration: 0.3 }}
+        <img 
+          src={`https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(name)}&backgroundColor=transparent`} 
+          alt={name} 
+          style={{ width: "100%", height: "100%", objectFit: "cover" }} 
         />
-        {/* Other arm */}
-        <motion.line
-          x1={side === "left" ? 45 : 75}
-          y1="75"
-          x2={side === "left" ? 15 : 105}
-          y2="72"
-          stroke={color}
-          strokeWidth="5"
-          strokeLinecap="round"
-          animate={pull ? { x2: side === "left" ? [15, 10, 15] : [105, 110, 105] } : {}}
-          transition={{ repeat: Infinity, duration: 0.35, delay: 0.1 }}
-        />
-        {/* Legs - planted */}
-        <line x1="52" y1="97" x2={side === "left" ? 40 : 48} y2="140" stroke={color} strokeWidth="6" strokeLinecap="round" />
-        <line x1="68" y1="97" x2={side === "left" ? 72 : 80} y2="140" stroke={color} strokeWidth="6" strokeLinecap="round" />
-        {/* Feet */}
-        <ellipse cx={side === "left" ? 38 : 46} cy="142" rx="8" ry="4" fill={color} />
-        <ellipse cx={side === "left" ? 70 : 78} cy="142" rx="8" ry="4" fill={color} />
-      </motion.svg>
+      </motion.div>
 
       {/* Name label */}
       <div

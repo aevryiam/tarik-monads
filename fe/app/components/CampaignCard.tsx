@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import LightningEffect from "./LightningEffect";
+import Sparkline from "./Sparkline";
+import { icons } from "lucide-react";
 
 interface CampaignCardProps {
   id: number;
   nameA: string;
   nameB: string;
-  imageUrl: string;
+  imageUrl?: string;
   category: string;
   pctA: number;
   tvlA: number;
@@ -19,11 +21,14 @@ interface CampaignCardProps {
   hot?: boolean;
   onClick?: () => void;
   featured?: boolean;
+  iconName?: string;
+  trendA?: number[];
 }
 
 export default function CampaignCard({
   nameA, nameB, imageUrl, category, pctA,
   tvlA, tvlB, participants, endTime, yieldBps, hot, onClick, featured,
+  iconName, trendA
 }: CampaignCardProps) {
   const pctB = 100 - pctA;
   const [timeLeft, setTimeLeft] = useState("");
@@ -54,6 +59,20 @@ export default function CampaignCard({
   const isClose = Math.abs(pctA - 50) < 10;
   const totalTVL = tvlA + tvlB;
 
+  // Render Icon if exists
+  const IconComponent = iconName ? (icons as any)[iconName] : null;
+
+  // $10 Bet Simulation logic
+  // Calculate total return based on proportion
+  const calcReturn = (sideTvl: number) => {
+    if (sideTvl === 0) return 0;
+    // You get your $10 back + proportion of the other side's TVL
+    const myShare = 10 / (sideTvl + 10);
+    const otherSideTvl = sideTvl === tvlA ? tvlB : tvlA;
+    const profit = myShare * otherSideTvl;
+    return (10 + profit).toFixed(2);
+  };
+
   return (
     <motion.div
       onClick={onClick}
@@ -69,25 +88,35 @@ export default function CampaignCard({
         width: featured ? "100%" : undefined,
       }}
     >
-      {/* Image header */}
+      {/* Header section (Icon / Image) */}
       <div
         style={{
           position: "relative",
-          height: featured ? 200 : 140,
-          backgroundImage: `url(${imageUrl})`,
+          height: featured ? 160 : 120,
+          background: imageUrl ? `url(${imageUrl})` : "linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
+        {IconComponent && !imageUrl && (
+          <motion.div
+             initial={{ scale: 0.8, opacity: 0 }}
+             animate={{ scale: 1, opacity: 0.15 }}
+             transition={{ duration: 0.5 }}
+          >
+            <IconComponent size={featured ? 100 : 70} color="var(--text-primary)" strokeWidth={1} />
+          </motion.div>
+        )}
+
         {/* Gradient overlay */}
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, transparent 30%, var(--bg-card) 100%)",
+          background: "linear-gradient(180deg, transparent 10%, var(--bg-card) 100%)",
         }} />
-
-        {/* Lightning overlay for intense matchups */}
-        {isClose && <LightningEffect intensity={intensity} />}
 
         {/* Top badges */}
         <div style={{ position: "absolute", top: 10, left: 10, display: "flex", gap: 6, zIndex: 2 }}>
@@ -108,6 +137,9 @@ export default function CampaignCard({
           </span>
           {hot && (
             <span style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
               padding: "3px 8px",
               borderRadius: 4,
               fontSize: "0.6rem",
@@ -119,7 +151,7 @@ export default function CampaignCard({
               color: "var(--red-light)",
               border: "1px solid rgba(230,57,70,0.3)",
             }}>
-              🔥 HOT
+              <icons.Flame size={10} /> HOT
             </span>
           )}
         </div>
@@ -177,21 +209,26 @@ export default function CampaignCard({
         </div>
 
         {/* Tug bar */}
-        <div style={{ position: "relative", marginBottom: 8 }}>
-          {/* Percentage labels */}
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          {/* Percentage labels & Sparkline */}
           <div style={{
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "flex-end",
             marginBottom: 4,
           }}>
-            <span style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: featured ? "1.1rem" : "0.85rem",
-              fontWeight: 700,
-              color: "var(--red-light)",
-            }}>
-              {pctA.toFixed(1)}%
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: featured ? "1.1rem" : "0.85rem",
+                fontWeight: 700,
+                color: "var(--red-light)",
+              }}>
+                {pctA.toFixed(1)}%
+              </span>
+              {trendA && trendA.length > 0 && <Sparkline data={trendA} color="var(--red-main)" />}
+            </div>
+            
             <span style={{
               fontFamily: "var(--font-mono)",
               fontSize: featured ? "1.1rem" : "0.85rem",
@@ -220,7 +257,9 @@ export default function CampaignCard({
                   ? "linear-gradient(90deg, var(--red-main), var(--red-glow))"
                   : "linear-gradient(90deg, var(--red-dark), var(--red-main))",
                 borderRadius: "4px 0 0 4px",
-                position: "relative",
+                position: "absolute",
+                left: 0,
+                top: 0,
               }}
             >
               {/* Pulse glow when close */}
@@ -241,6 +280,26 @@ export default function CampaignCard({
                 />
               )}
             </motion.div>
+            
+            {/* Lightning Effect positioned at the junction */}
+            {isClose && (
+              <motion.div
+                initial={{ left: "50%" }}
+                animate={{ left: `${animatedPctA}%` }}
+                transition={{ type: "spring", stiffness: 60, damping: 15 }}
+                style={{
+                   position: 'absolute',
+                   top: '50%',
+                   transform: 'translate(-50%, -50%)',
+                   width: 30,
+                   height: 40,
+                   pointerEvents: 'none',
+                   zIndex: 10
+                }}
+              >
+                <LightningEffect intensity={intensity} />
+              </motion.div>
+            )}
           </div>
         </div>
 
@@ -249,6 +308,7 @@ export default function CampaignCard({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          marginBottom: featured ? 12 : 0,
         }}>
           <div style={{ display: "flex", gap: 12 }}>
             <span style={{
@@ -274,6 +334,32 @@ export default function CampaignCard({
             ⏱ {timeLeft}
           </span>
         </div>
+
+        {/* Featured Bet Simulation */}
+        {featured && (
+          <div style={{
+            marginTop: 12,
+            padding: "8px 12px",
+            background: "rgba(255,255,255,0.03)",
+            borderRadius: 8,
+            border: "1px dashed var(--border-subtle)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+             <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-dim)"}}>
+               $10 bet pays:
+             </span>
+             <div style={{ display: "flex", gap: 12 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--red-light)"}}>
+                  {nameA}: <strong style={{color:"white"}}>${calcReturn(tvlA)}</strong>
+                </span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--blue-light)"}}>
+                  {nameB}: <strong style={{color:"white"}}>${calcReturn(tvlB)}</strong>
+                </span>
+             </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

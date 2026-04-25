@@ -3,6 +3,7 @@
 import { useAccount, useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Flame } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import TugOfWarArena from "@/app/components/TugOfWarArena";
 import ActionPanel from "@/app/components/ActionPanel";
@@ -14,7 +15,7 @@ import CampaignCard from "@/app/components/CampaignCard";
 import { ADDRESSES, TARIK_VAULT_ABI, VICTORY_CRATE_ABI } from "@/app/config/contracts";
 import { MOCK_CAMPAIGNS, type MockCampaign } from "@/app/config/mockData";
 
-type ViewMode = "grid" | "arena";
+type ViewMode = "grid" | "arena" | "lootboxes" | "leaderboard";
 
 export default function Home() {
   const { address } = useAccount();
@@ -176,9 +177,9 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <Navbar />
+      <Navbar activeView={view} onViewChange={(v) => setView(v as ViewMode)} />
 
-      <main style={{ paddingTop: 56, maxWidth: 1080, margin: "0 auto", padding: "56px 16px 48px" }}>
+      <main style={{ paddingTop: 80, maxWidth: 1400, margin: "0 auto", padding: "80px 32px 48px" }}>
         {/* Grid view — Polymarket-style */}
         {view === "grid" && (
           <motion.div
@@ -240,7 +241,7 @@ export default function Home() {
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4caf50", display: "inline-block" }} />
                   LIVE ON-CHAIN
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 16 }}>
                   {Array.from({ length: warCount }).map((_, i) => (
                     <OnChainWarCard key={i} warId={i} onClick={() => openOnChainWar(i)} />
                   ))}
@@ -257,7 +258,7 @@ export default function Home() {
                   color: "var(--text-dim)", marginBottom: 10,
                   display: "flex", alignItems: "center", gap: 6,
                 }}>
-                  🔥 TRENDING
+                  <Flame size={14} color="var(--red-glow)" /> TRENDING
                 </div>
                 <CampaignCard {...featured} onClick={() => openCampaign(featured)} featured />
               </div>
@@ -266,7 +267,7 @@ export default function Home() {
             {/* Campaign grid */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
               gap: 16,
             }}>
               {rest.map((c) => (
@@ -404,6 +405,58 @@ export default function Home() {
             Built on <span style={{ color: "var(--text-secondary)" }}>Monad</span> · {new Date().getFullYear()}
           </div>
         </footer>
+        {/* Lootboxes View */}
+        {view === "lootboxes" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ padding: "40px 0" }}
+          >
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: "var(--gold)", letterSpacing: "0.1em" }}>
+                YOUR LOOTBOXES
+              </h2>
+              <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>
+                Unseal the crates you've won to claim your yield.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 32 }}>
+              {/* Show actual un-opened crates if any */}
+              {warCount > 0 && Array.from({ length: warCount }).map((_, i) => {
+                // In a real app we'd map through balances. For demo, we just show one if they have it
+                if (i === activeWarId && crateBalance && Number(crateBalance) > 0 && !crateOpened) {
+                   return (
+                     <div key={i} style={{ width: 300 }}>
+                        <VictoryCrate
+                          yieldAmount={crateYield || BigInt(0)}
+                          isOpened={false}
+                          onOpen={() => {}}
+                          isOpening={false}
+                        />
+                     </div>
+                   );
+                }
+                return null;
+              })}
+
+              {/* Show a demo crate for the user to try if they have none */}
+              {(!crateBalance || Number(crateBalance) === 0) && (
+                <div style={{ width: 300 }}>
+                  <div style={{ textAlign: "center", marginBottom: 12, fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--text-dim)" }}>
+                    Demo Crate (Try it!)
+                  </div>
+                  <VictoryCrate
+                    yieldAmount={BigInt(25000000)} // $25.00
+                    isOpened={false}
+                    onOpen={() => {}}
+                    isOpening={false}
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
       </main>
     </div>
   );

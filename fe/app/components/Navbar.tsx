@@ -18,7 +18,7 @@ if (isPrivyEnabled) {
   }
 }
 
-export default function Navbar() {
+export default function Navbar({ activeView, onViewChange }: { activeView?: string, onViewChange?: (v: string) => void }) {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
@@ -56,120 +56,130 @@ export default function Navbar() {
   });
 
   return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "12px 20px",
-        background: "rgba(11, 12, 16, 0.8)",
-        backdropFilter: "blur(16px)",
-        borderBottom: "1px solid var(--border-subtle)",
-      }}
-    >
-      {/* Left: Logo + nav */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "1.6rem",
-            letterSpacing: "0.12em",
-            lineHeight: 1,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ color: "var(--red-main)" }}>TA</span>
-          <span style={{ color: "var(--text-primary)" }}>R</span>
-          <span style={{ color: "var(--blue-main)" }}>IK</span>
+    <div style={{ display: "flex", justifyContent: "center", width: "100%", position: "fixed", top: 20, left: 0, zIndex: 50, pointerEvents: "none" }}>
+      <nav
+        style={{
+          pointerEvents: "auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "8px 16px",
+          width: "90%",
+          maxWidth: 1100,
+          background: "rgba(30, 41, 59, 0.7)", // Slate 800 with transparency
+          backdropFilter: "blur(20px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 40, // Capsule shape
+          boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+        }}
+      >
+        {/* Left: Logo + nav */}
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "1.8rem",
+              letterSpacing: "0.08em",
+              lineHeight: 1,
+              cursor: "pointer",
+              marginLeft: 8,
+            }}
+          >
+            <span style={{ color: "var(--red-main)" }}>TA</span>
+            <span style={{ color: "var(--text-primary)" }}>R</span>
+            <span style={{ color: "var(--blue-main)" }}>IK</span>
+          </div>
+
+          <div style={{ display: "flex", gap: 4 }}>
+            {["Markets", "Leaderboard", "Lootboxes"].map((label) => {
+              const viewValue = label === "Markets" ? "grid" : label.toLowerCase();
+              const isActive = activeView === viewValue;
+              return (
+                <button
+                  key={label}
+                  onClick={() => onViewChange && onViewChange(viewValue)}
+                  style={{
+                    fontFamily: "var(--font-body)", fontSize: "0.85rem", fontWeight: 600,
+                    color: isActive ? "var(--text-primary)" : "var(--text-dim)",
+                    background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+                    border: "none", padding: "8px 16px", borderRadius: 20,
+                    cursor: "pointer", transition: "all 0.2s",
+                  }}
+                >
+                  {label === "Lootboxes" ? "🎁 Lootboxes" : label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: 4 }}>
-          {["Markets", "Leaderboard"].map((label) => (
-            <button
-              key={label}
+        {/* Right: Balance + Auth */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {authenticated && address && balance !== undefined && (
+            <div
               style={{
-                fontFamily: "var(--font-body)", fontSize: "0.8rem",
-                color: label === "Markets" ? "var(--text-primary)" : "var(--text-dim)",
-                background: label === "Markets" ? "rgba(255,255,255,0.06)" : "transparent",
-                border: "none", padding: "6px 12px", borderRadius: 6,
-                cursor: "pointer", transition: "all 0.15s",
+                fontFamily: "var(--font-mono)", fontSize: "0.75rem",
+                color: "var(--text-secondary)",
+                padding: "6px 12px",
+                background: "rgba(0,0,0,0.2)",
+                borderRadius: 20,
+                border: "1px solid rgba(255,255,255,0.05)",
               }}
             >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+              <span style={{ color: "var(--gold)" }}>
+                {Number(formatUnits(balance, 6)).toLocaleString()}
+              </span>{" "}
+              <span style={{ color: "var(--text-dim)" }}>mUSDC</span>
+            </div>
+          )}
 
-      {/* Right: Balance + Auth */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {authenticated && address && balance !== undefined && (
-          <div
-            style={{
-              fontFamily: "var(--font-mono)", fontSize: "0.75rem",
-              color: "var(--text-secondary)",
-              padding: "5px 10px",
-              background: "rgba(255,255,255,0.04)",
-              borderRadius: 6,
-            }}
-          >
-            <span style={{ color: "var(--gold)" }}>
-              {Number(formatUnits(balance, 6)).toLocaleString()}
-            </span>{" "}
-            <span style={{ color: "var(--text-dim)" }}>mUSDC</span>
-          </div>
-        )}
-
-        {isOwner && (
-          <span style={{
-            padding: "3px 8px", borderRadius: 4, fontSize: "0.6rem",
-            fontFamily: "var(--font-mono)", fontWeight: 700,
-            background: "rgba(255,215,0,0.12)", color: "var(--gold)",
-            border: "1px solid rgba(255,215,0,0.2)", letterSpacing: "0.08em",
-          }}>
-            ADMIN
-          </span>
-        )}
-
-        {authenticated ? (
-          <div
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "6px 12px",
-              background: "rgba(255,255,255,0.06)",
-              borderRadius: 8,
-              border: "1px solid var(--border-subtle)",
-              cursor: "pointer", transition: "all 0.15s",
-            }}
-            onClick={handleLogout}
-          >
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4caf50" }} />
-            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.8rem", color: "var(--text-primary)" }}>
-              {displayName || "Connected"}
+          {isOwner && (
+            <span style={{
+              padding: "4px 10px", borderRadius: 20, fontSize: "0.6rem",
+              fontFamily: "var(--font-mono)", fontWeight: 700,
+              background: "rgba(255,215,0,0.15)", color: "var(--gold)",
+              border: "1px solid rgba(255,215,0,0.3)", letterSpacing: "0.05em",
+            }}>
+              ADMIN
             </span>
-          </div>
-        ) : (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleLogin}
-            style={{
-              fontFamily: "var(--font-body)", fontSize: "0.8rem", fontWeight: 600,
-              padding: "7px 16px",
-              background: "var(--text-primary)", color: "var(--bg-primary)",
-              border: "none", borderRadius: 8, cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            {isPrivyEnabled ? "Sign In" : "Connect Wallet"}
-          </motion.button>
-        )}
-      </div>
-    </nav>
+          )}
+
+          {authenticated ? (
+            <div
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "6px 14px",
+                background: "rgba(255,255,255,0.08)",
+                borderRadius: 20,
+                border: "1px solid rgba(255,255,255,0.1)",
+                cursor: "pointer", transition: "all 0.2s",
+              }}
+              onClick={handleLogout}
+            >
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4caf50", boxShadow: "0 0 8px #4caf50" }} />
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem", fontWeight: 500, color: "var(--text-primary)" }}>
+                {displayName || "Connected"}
+              </span>
+            </div>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogin}
+              style={{
+                fontFamily: "var(--font-body)", fontSize: "0.85rem", fontWeight: 700,
+                padding: "8px 20px",
+                background: "linear-gradient(90deg, var(--blue-main), var(--blue-glow))", 
+                color: "#fff",
+                border: "none", borderRadius: 20, cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+              }}
+            >
+              {isPrivyEnabled ? "Sign In" : "Connect"}
+            </motion.button>
+          )}
+        </div>
+      </nav>
+    </div>
   );
 }
