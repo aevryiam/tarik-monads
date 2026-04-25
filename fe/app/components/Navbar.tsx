@@ -67,11 +67,10 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
           padding: "8px 16px",
           width: "90%",
           maxWidth: 1100,
-          background: "rgba(255, 255, 255, 0.85)", // Light mode floating capsule
-          backdropFilter: "blur(20px)",
-          border: "1px solid rgba(0,0,0,0.05)",
+          background: "#ffffff", // Pure white for max contrast
+          border: "1px solid var(--border-subtle)",
           borderRadius: 40, 
-          boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
         }}
       >
         {/* Left: Logo + nav */}
@@ -90,7 +89,7 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
                     fontFamily: "var(--font-body)", fontSize: "0.85rem", fontWeight: 600,
-                    color: isActive ? "var(--blue-main)" : "var(--text-secondary)",
+                    color: isActive ? "var(--blue-main)" : "#64748b", // #64748b is slate-500, very readable
                     background: isActive ? "rgba(59, 130, 246, 0.1)" : "transparent",
                     border: "none", padding: "8px 16px", borderRadius: 20,
                     cursor: "pointer", transition: "all 0.2s",
