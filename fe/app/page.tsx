@@ -31,7 +31,7 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
 
   // Custom hooks — replace 8 inline useReadContract calls
-  const { warCount } = useWarList();
+  const { warCount, activeWars } = useWarList();
   const { war, tugPosition, isOpen } = useWar(activeWarId);
   const { deposit: userDeposit, isWinner } = useUserDeposit(activeWarId);
   const { hasCrate, isOpened: crateOpened, yieldAmount: crateYield } = useVictoryCrate(activeWarId);
@@ -172,7 +172,7 @@ export default function Home() {
             </div>
 
             {/* On-chain wars (if any) */}
-            {warCount > 0 && (
+            {activeWars.length > 0 && (
               <div style={{ marginBottom: 24 }}>
                 <div style={{
                   fontFamily: "var(--font-mono)", fontSize: "0.65rem",
@@ -184,8 +184,8 @@ export default function Home() {
                   LIVE ON-CHAIN
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 16 }}>
-                  {Array.from({ length: warCount }).map((_, i) => (
-                    <OnChainWarCard key={i} warId={i} onClick={() => openOnChainWar(i)} />
+                  {activeWars.map((w) => (
+                    <OnChainWarCard key={w.warId} warId={w.warId} onClick={() => openOnChainWar(w.warId)} />
                   ))}
                 </div>
               </div>

@@ -7,11 +7,16 @@ import { useReadContract, useReadContracts } from "wagmi";
 import { ADDRESSES } from "@/app/config/addresses";
 import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
 import { REFETCH_INTERVAL } from "@/app/config/constants";
+import { WarStatus } from "@/app/types/contracts";
 import type { War, WarWithId } from "@/app/types/contracts";
 
 interface UseWarListResult {
   warCount: number;
   wars: WarWithId[];
+  /** Wars yang masih aktif (status Active), termasuk yang menunggu resolusi */
+  activeWars: WarWithId[];
+  /** Wars yang sudah Resolved atau Cancelled */
+  resolvedWars: WarWithId[];
   isLoading: boolean;
   refetch: () => void;
 }
@@ -52,9 +57,22 @@ export function useWarList(): UseWarListResult {
     })
     .filter((w): w is WarWithId => w !== null);
 
+  /**
+   * War ditampilkan di "LIVE ON-CHAIN" hanya jika status masih Active
+   * dan batas waktu (endTime) belum terlewat.
+   */
+  const nowSec = BigInt(Math.floor(Date.now() / 1000));
+  const activeWars = wars.filter((w) => w.status === WarStatus.Active && w.endTime > nowSec);
+
+  const resolvedWars = wars.filter(
+    (w) => w.status === WarStatus.Resolved || w.status === WarStatus.Cancelled
+  );
+
   return {
     warCount,
     wars,
+    activeWars,
+    resolvedWars,
     isLoading: countLoading || warsLoading,
     refetch,
   };
