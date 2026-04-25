@@ -34,7 +34,7 @@ contract DeployFresh is Script {
         vault.setVictoryCrate(address(crate));
         console.log("[4] vault.victoryCrate    = crate OK");
 
-        uint256 yieldReserve = 100_000 ether;
+        uint256 yieldReserve = 1 ether;
         vault.fundYieldReserve{value: yieldReserve}(yieldReserve);
         console.log("[5] Yield reserve funded  :", yieldReserve);
 
