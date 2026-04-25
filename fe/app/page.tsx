@@ -15,6 +15,10 @@ import CampaignCard from "@/app/components/CampaignCard";
 import Leaderboard from "@/app/components/Leaderboard";
 import { ADDRESSES, TARIK_VAULT_ABI, VICTORY_CRATE_ABI } from "@/app/config/contracts";
 import { MOCK_CAMPAIGNS, type MockCampaign } from "@/app/config/mockData";
+import { useWar } from "@/app/hooks/useWar";
+import { useWarList } from "@/app/hooks/useWarList";
+import { useUserDeposit } from "@/app/hooks/useUserDeposit";
+import { useVictoryCrate } from "@/app/hooks/useVictoryCrate";
 
 type ViewMode = "grid" | "arena" | "lootboxes" | "leaderboard" | "admin";
 
@@ -26,76 +30,19 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
 
-  // Get total wars from chain
-  const { data: currentWarId } = useReadContract({
-    address: ADDRESSES.tarikVault,
-    abi: TARIK_VAULT_ABI,
-    functionName: "currentWarId",
-    query: { refetchInterval: 8000 },
-  });
+  // Custom hooks — replace 8 inline useReadContract calls
+  const { warCount } = useWarList();
+  const { war, tugPosition, isOpen } = useWar(activeWarId);
+  const { deposit: userDeposit, isWinner } = useUserDeposit(activeWarId);
+  const { hasCrate, isOpened: crateOpened, yieldAmount: crateYield } = useVictoryCrate(activeWarId);
+
+  const currentWarId = warCount > 0 ? BigInt(warCount) : undefined;
 
   useEffect(() => {
-    if (currentWarId !== undefined && Number(currentWarId) > 0) {
-      setActiveWarId(Number(currentWarId) - 1);
+    if (warCount > 0) {
+      setActiveWarId(warCount - 1);
     }
-  }, [currentWarId]);
-
-  // Read war data
-  const { data: war } = useReadContract({
-    address: ADDRESSES.tarikVault,
-    abi: TARIK_VAULT_ABI,
-    functionName: "getWar",
-    args: [BigInt(activeWarId)],
-    query: { enabled: currentWarId !== undefined && Number(currentWarId) > 0, refetchInterval: 4000 },
-  });
-
-  const { data: tugPosition } = useReadContract({
-    address: ADDRESSES.tarikVault,
-    abi: TARIK_VAULT_ABI,
-    functionName: "getTugOfWarPosition",
-    args: [BigInt(activeWarId)],
-    query: { enabled: !!war, refetchInterval: 4000 },
-  });
-
-  const { data: isOpen } = useReadContract({
-    address: ADDRESSES.tarikVault,
-    abi: TARIK_VAULT_ABI,
-    functionName: "isDepositOpen",
-    args: [BigInt(activeWarId)],
-    query: { enabled: !!war, refetchInterval: 4000 },
-  });
-
-  const { data: crateBalance } = useReadContract({
-    address: ADDRESSES.victoryCrate,
-    abi: VICTORY_CRATE_ABI,
-    functionName: "balanceOf",
-    args: address ? [address, BigInt(activeWarId)] : undefined,
-    query: { enabled: !!address && !!war, refetchInterval: 8000 },
-  });
-
-  const { data: crateOpened } = useReadContract({
-    address: ADDRESSES.victoryCrate,
-    abi: VICTORY_CRATE_ABI,
-    functionName: "crateOpened",
-    args: address ? [BigInt(activeWarId), address] : undefined,
-    query: { enabled: !!address && !!war, refetchInterval: 8000 },
-  });
-
-  const { data: crateYield } = useReadContract({
-    address: ADDRESSES.victoryCrate,
-    abi: VICTORY_CRATE_ABI,
-    functionName: "crateYield",
-    args: [BigInt(activeWarId)],
-    query: { enabled: !!war, refetchInterval: 8000 },
-  });
-
-  const { data: userDeposit } = useReadContract({
-    address: ADDRESSES.tarikVault,
-    abi: TARIK_VAULT_ABI,
-    functionName: "getUserDeposit",
-    args: address ? [BigInt(activeWarId), address] : undefined,
-    query: { enabled: !!address && !!war, refetchInterval: 5000 },
-  });
+  }, [warCount]);
 
   // Dismiss splash
   useEffect(() => {
@@ -103,10 +50,8 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  const warCount = currentWarId !== undefined ? Number(currentWarId) : 0;
   const hasWar = war && warCount > 0;
-  const hasCrate = crateBalance !== undefined && crateBalance > BigInt(0);
-  const isWinner = war && Number(war.status) === 1 && userDeposit && userDeposit.side === Number(war.winningSide);
+  const userIsWinner = isWinner(war);
 
   const [featuredWarId, setFeaturedWarId] = useState<number | null>(null);
 
@@ -341,8 +286,8 @@ export default function Home() {
                   nameB={war.nameB}
                   tvlA={war.tvlA}
                   tvlB={war.tvlB}
-                  pctA={tugPosition ? Number(tugPosition[0]) : 5000}
-                  pctB={tugPosition ? Number(tugPosition[1]) : 5000}
+                  pctA={tugPosition ? Number(tugPosition.pctA) : 5000}
+                  pctB={tugPosition ? Number(tugPosition.pctB) : 5000}
                   status={Number(war.status)}
                   winningSide={Number(war.winningSide)}
                   yieldBps={Number(war.mockYieldBps)}
@@ -369,17 +314,18 @@ export default function Home() {
                     isOpen={!!isOpen}
                     status={Number(war.status)}
                     winningSide={Number(war.winningSide)}
+                    war={war}
                   />
                 </div>
 
-                {hasCrate && isWinner && (
+                {hasCrate && userIsWinner && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                   >
                     <VictoryCrate
                       yieldAmount={crateYield ?? BigInt(0)}
-                      isOpened={!!crateOpened}
+                      isOpened={crateOpened}
                       onOpen={() => {}}
                       isOpening={false}
                     />
@@ -408,8 +354,7 @@ export default function Home() {
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 32 }}>
               {/* Show actual un-opened crates if any */}
               {warCount > 0 && Array.from({ length: warCount }).map((_, i) => {
-                // In a real app we'd map through balances. For demo, we just show one if they have it
-                if (i === activeWarId && crateBalance && Number(crateBalance) > 0 && !crateOpened) {
+                if (i === activeWarId && hasCrate && !crateOpened) {
                    return (
                      <div key={i} style={{ width: 300 }}>
                         <VictoryCrate
@@ -425,7 +370,7 @@ export default function Home() {
               })}
 
               {/* Show a demo crate for the user to try if they have none */}
-              {(!crateBalance || Number(crateBalance) === 0) && (
+              {(!hasCrate) && (
                 <div style={{ width: 300 }}>
                   <div style={{ textAlign: "center", marginBottom: 12, fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--text-dim)" }}>
                     Demo Crate (Try it!)

@@ -46,7 +46,11 @@ export default function WarInfo(props: WarInfoProps) {
     return `${s}s`;
   };
 
-  const formatUSDC = (val: bigint) => Number(val / BigInt(1e6)).toLocaleString();
+  /** Locale-independent: always uses comma thousands separator */
+  const formatUSDC = (val: bigint) => {
+    const n = Math.round(Number(val) / 1e6);
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
   const statusLabels = ["ACTIVE", "RESOLVED", "CANCELLED"];
   const statusClass = ["badge-active", "badge-resolved", "badge-cancelled"];
 

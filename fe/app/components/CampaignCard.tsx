@@ -73,6 +73,9 @@ export default function CampaignCard({
     return (10 + profit).toFixed(2);
   };
 
+  /** Locale-independent number formatter — always uses comma thousands separator */
+  const fmt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
   return (
     <motion.div
       onClick={onClick}
@@ -308,14 +311,14 @@ export default function CampaignCard({
               fontSize: "0.65rem",
               color: "var(--text-dim)",
             }}>
-              ${totalTVL.toLocaleString()} TVL
+              ${fmt(totalTVL)} TVL
             </span>
             <span style={{
               fontFamily: "var(--font-mono)",
               fontSize: "0.65rem",
               color: "var(--text-dim)",
             }}>
-              {participants.toLocaleString()} players
+              {fmt(participants)} players
             </span>
           </div>
           <span style={{
