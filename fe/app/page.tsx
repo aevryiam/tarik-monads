@@ -2,6 +2,7 @@
 
 import { useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
+import { parseEther } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
@@ -18,18 +19,48 @@ import { useWar } from "@/app/hooks/useWar";
 import { useWarList } from "@/app/hooks/useWarList";
 import { useUserDeposit } from "@/app/hooks/useUserDeposit";
 import { useVictoryCrate } from "@/app/hooks/useVictoryCrate";
+import { MOCK_CAMPAIGNS, type MockCampaign } from "@/app/config/mockData";
+import { toastError, toastInfo, toastSuccess } from "@/app/lib/toast";
+import { formatMON } from "@/app/lib/formatters";
 
 type ViewMode = "grid" | "arena" | "lootboxes" | "leaderboard" | "admin";
+
+type MockCrate = {
+  campaignId: number;
+  nameA: string;
+  nameB: string;
+  yieldAmount: bigint;
+  opened: boolean;
+};
+
+const toMONWei = (value: number) =>
+  BigInt(Math.round(value * 1_000_000)) * BigInt(10) ** BigInt(12);
 
 export default function Home() {
   const [view, setView] = useState<ViewMode>("grid");
   const [activeWarId, setActiveWarId] = useState<number | null>(null);
   const [featuredWarId, setFeaturedWarId] = useState<number | null>(null);
   const [showSplash, setShowSplash] = useState(true);
+  const [mockCampaigns, setMockCampaigns] =
+    useState<MockCampaign[]>(MOCK_CAMPAIGNS);
+  const [selectedMockCampaignId, setSelectedMockCampaignId] = useState<
+    number | null
+  >(null);
+  const [mockStakeAmount, setMockStakeAmount] = useState("1");
+  const [mockCrates, setMockCrates] = useState<MockCrate[]>([]);
+  const [mockCreateNameA, setMockCreateNameA] = useState("Alpha");
+  const [mockCreateNameB, setMockCreateNameB] = useState("Beta");
+  const [mockCreateDuration, setMockCreateDuration] = useState("60");
+  const [mockCreateYieldBps, setMockCreateYieldBps] = useState("1200");
 
-  const { warCount, activeWars } = useWarList();
+  const { warCount, wars, activeWars } = useWarList();
   const selectedWarId = activeWarId ?? (warCount > 0 ? warCount - 1 : 0);
-  const { war, tugPosition, isOpen } = useWar(selectedWarId);
+  const {
+    war,
+    tugPosition,
+    isOpen,
+    isLoading: warDetailLoading,
+  } = useWar(selectedWarId);
   const { isWinner } = useUserDeposit(selectedWarId);
   const {
     hasCrate,
@@ -42,16 +73,141 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  const hasWar = Boolean(war && warCount > 0);
-  const userIsWinner = isWinner(war);
-  const currentWar = hasWar ? war : undefined;
+  const fallbackWar = wars.find((w) => w.warId === selectedWarId);
+  const currentWar = war ?? fallbackWar;
+  const hasWar = Boolean(currentWar && warCount > 0);
+  const userIsWinner = isWinner(currentWar);
+  const selectedMockCampaign =
+    mockCampaigns.find((c) => c.id === selectedMockCampaignId) ?? null;
   const latestOnChainWarId =
     activeWars.length > 0 ? activeWars[activeWars.length - 1].warId : null;
   const featuredOnChainWarId = featuredWarId ?? latestOnChainWarId;
 
   const openOnChainWar = (id: number) => {
+    setSelectedMockCampaignId(null);
     setActiveWarId(id);
     setView("arena");
+  };
+
+  const openMockCampaign = (id: number) => {
+    setActiveWarId(null);
+    setSelectedMockCampaignId(id);
+    setView("arena");
+  };
+
+  const handleMockCreateCampaign = () => {
+    const sideA = mockCreateNameA.trim();
+    const sideB = mockCreateNameB.trim();
+    const durationNum = Number(mockCreateDuration);
+    const yieldNum = Number(mockCreateYieldBps);
+
+    if (!sideA || !sideB || durationNum <= 0 || yieldNum <= 0) {
+      toastError("Isi data mock campaign dengan benar.");
+      return;
+    }
+
+    const nextId =
+      mockCampaigns.length > 0
+        ? Math.max(...mockCampaigns.map((c) => c.id)) + 1
+        : 1;
+    const endTime = Math.floor(Date.now() / 1000) + durationNum * 60;
+
+    const newMock: MockCampaign = {
+      id: nextId,
+      nameA: sideA,
+      nameB: sideB,
+      category: "Mock",
+      pctA: 50,
+      tvlA: 0,
+      tvlB: 0,
+      participants: 0,
+      endTime,
+      yieldBps: yieldNum,
+      hot: true,
+      iconName: "Zap",
+      trendA: [50, 50, 50, 50, 50, 50],
+    };
+
+    setMockCampaigns((prev) => [newMock, ...prev]);
+    toastSuccess(`Mock campaign ${sideA} vs ${sideB} berhasil dibuat.`);
+    toastInfo("Ini hanya simulasi lokal untuk demo UI.");
+  };
+
+  const handleMockStake = (side: 1 | 2) => {
+    if (!selectedMockCampaign) return;
+
+    const amount = Number(mockStakeAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toastError("Jumlah stake mock tidak valid.");
+      return;
+    }
+
+    setMockCampaigns((prev) =>
+      prev.map((campaign) => {
+        if (campaign.id !== selectedMockCampaign.id) return campaign;
+
+        const nextTvlA = side === 1 ? campaign.tvlA + amount : campaign.tvlA;
+        const nextTvlB = side === 2 ? campaign.tvlB + amount : campaign.tvlB;
+        const total = nextTvlA + nextTvlB;
+        const nextPctA = total > 0 ? (nextTvlA / total) * 100 : 50;
+
+        return {
+          ...campaign,
+          tvlA: nextTvlA,
+          tvlB: nextTvlB,
+          pctA: nextPctA,
+          participants: campaign.participants + 1,
+          trendA: [...campaign.trendA.slice(-5), Number(nextPctA.toFixed(1))],
+        };
+      }),
+    );
+
+    const mockYieldAmount = parseEther((amount * 0.12).toFixed(4));
+    setMockCrates((prev) => {
+      const existing = prev.find(
+        (crate) => crate.campaignId === selectedMockCampaign.id,
+      );
+      if (!existing) {
+        return [
+          {
+            campaignId: selectedMockCampaign.id,
+            nameA: selectedMockCampaign.nameA,
+            nameB: selectedMockCampaign.nameB,
+            yieldAmount: mockYieldAmount,
+            opened: false,
+          },
+          ...prev,
+        ];
+      }
+
+      return prev.map((crate) =>
+        crate.campaignId === selectedMockCampaign.id
+          ? {
+              ...crate,
+              opened: false,
+              yieldAmount: crate.yieldAmount + mockYieldAmount,
+            }
+          : crate,
+      );
+    });
+
+    toastSuccess(
+      `Mock stake ${amount.toFixed(2)} MON ke ${side === 1 ? selectedMockCampaign.nameA : selectedMockCampaign.nameB} berhasil.`,
+    );
+  };
+
+  const handleOpenMockCrate = (campaignId: number) => {
+    const crate = mockCrates.find((item) => item.campaignId === campaignId);
+    if (!crate || crate.opened) return;
+
+    setMockCrates((prev) =>
+      prev.map((item) =>
+        item.campaignId === campaignId ? { ...item, opened: true } : item,
+      ),
+    );
+    toastSuccess(
+      `Mock Victory NFT dibuka! +${formatMON(crate.yieldAmount)} MON`,
+    );
   };
 
   return (
@@ -243,38 +399,57 @@ export default function Home() {
                 </div>
               </>
             ) : (
-              <div
-                style={{
-                  padding: 28,
-                  borderRadius: 16,
-                  border: "1px dashed var(--border-medium)",
-                  background: "var(--bg-card)",
-                  textAlign: "center",
-                  maxWidth: 720,
-                  margin: "0 auto",
-                }}
-              >
+              <>
                 <div
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "1.2rem",
-                    letterSpacing: "0.08em",
-                    marginBottom: 8,
+                    padding: 20,
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,215,0,0.25)",
+                    background: "rgba(255,215,0,0.05)",
+                    marginBottom: 18,
                   }}
                 >
-                  NO ACTIVE ON-CHAIN CAMPAIGN
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "1rem",
+                      letterSpacing: "0.08em",
+                      marginBottom: 6,
+                      color: "var(--gold)",
+                    }}
+                  >
+                    MOCK MODE ACTIVE
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      color: "var(--text-secondary)",
+                      margin: 0,
+                    }}
+                  >
+                    On-chain campaign belum tersedia. Kamu tetap bisa demo
+                    stake, create campaign, dan lootbox pakai mock data.
+                  </p>
                 </div>
-                <p
+
+                <div
                   style={{
-                    fontFamily: "var(--font-body)",
-                    color: "var(--text-secondary)",
-                    margin: 0,
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(340px, 1fr))",
+                    gap: 16,
                   }}
                 >
-                  Mock campaigns are hidden. Create a real campaign from the
-                  Admin Dashboard to enable staking.
-                </p>
-              </div>
+                  {mockCampaigns.map((campaign) => (
+                    <CampaignCard
+                      key={`mock-${campaign.id}`}
+                      {...campaign}
+                      onClick={() => openMockCampaign(campaign.id)}
+                      featured={false}
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </motion.div>
         )}
@@ -289,6 +464,7 @@ export default function Home() {
               onClick={() => {
                 setView("grid");
                 setActiveWarId(null);
+                setSelectedMockCampaignId(null);
               }}
               style={{
                 fontFamily: "var(--font-body)",
@@ -314,7 +490,91 @@ export default function Home() {
               ← Back to Markets
             </button>
 
-            {currentWar && (
+            {selectedMockCampaign && (
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
+                <TugOfWarArena
+                  nameA={selectedMockCampaign.nameA}
+                  nameB={selectedMockCampaign.nameB}
+                  tvlA={toMONWei(selectedMockCampaign.tvlA)}
+                  tvlB={toMONWei(selectedMockCampaign.tvlB)}
+                  pctA={Math.round(selectedMockCampaign.pctA * 100)}
+                  pctB={Math.round((100 - selectedMockCampaign.pctA) * 100)}
+                  status={0}
+                  winningSide={0}
+                  yieldBps={selectedMockCampaign.yieldBps}
+                  totalDeposits={toMONWei(
+                    selectedMockCampaign.tvlA + selectedMockCampaign.tvlB,
+                  )}
+                />
+
+                <div
+                  className="card"
+                  style={{
+                    padding: 20,
+                    border: "1px solid rgba(255,215,0,0.2)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "1.1rem",
+                      letterSpacing: "0.08em",
+                      color: "var(--gold)",
+                    }}
+                  >
+                    MOCK STAKE PANEL
+                  </div>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "var(--text-secondary)",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    Simulasi lokal: stake sukses akan memberi mock Victory NFT
+                    di tab Lootboxes.
+                  </p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      className="input-field"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={mockStakeAmount}
+                      onChange={(e) => setMockStakeAmount(e.target.value)}
+                      placeholder="1.0"
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 10,
+                    }}
+                  >
+                    <button
+                      className="btn-battle btn-red"
+                      onClick={() => handleMockStake(1)}
+                    >
+                      Stake {selectedMockCampaign.nameA}
+                    </button>
+                    <button
+                      className="btn-battle btn-blue"
+                      onClick={() => handleMockStake(2)}
+                    >
+                      Stake {selectedMockCampaign.nameB}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!selectedMockCampaign && currentWar ? (
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 20 }}
               >
@@ -375,7 +635,42 @@ export default function Home() {
                   </motion.div>
                 )}
               </div>
-            )}
+            ) : !selectedMockCampaign ? (
+              <div
+                style={{
+                  padding: 24,
+                  borderRadius: 12,
+                  border: "1px solid var(--border-medium)",
+                  background: "var(--bg-card)",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "1.1rem",
+                    letterSpacing: "0.08em",
+                    marginBottom: 8,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  {warDetailLoading
+                    ? "LOADING CAMPAIGN"
+                    : "CAMPAIGN TIDAK DITEMUKAN"}
+                </div>
+                <p
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    color: "var(--text-secondary)",
+                    margin: 0,
+                  }}
+                >
+                  {warDetailLoading
+                    ? "Sedang sinkronisasi detail campaign. Coba tunggu sebentar."
+                    : "Detail campaign belum bisa dimuat. Kembali ke Markets lalu pilih ulang campaign."}
+                </p>
+              </div>
+            ) : null}
           </motion.div>
         )}
 
@@ -431,7 +726,32 @@ export default function Home() {
                   return null;
                 })}
 
-              {!hasCrate && (
+              {mockCrates.map((crate) => (
+                <div
+                  key={`mock-crate-${crate.campaignId}`}
+                  style={{ width: 300 }}
+                >
+                  <VictoryCrate
+                    yieldAmount={crate.yieldAmount}
+                    isOpened={crate.opened}
+                    onOpen={() => handleOpenMockCrate(crate.campaignId)}
+                    isOpening={false}
+                  />
+                  <div
+                    style={{
+                      marginTop: 8,
+                      textAlign: "center",
+                      fontFamily: "var(--font-mono)",
+                      color: "var(--text-dim)",
+                      fontSize: "0.65rem",
+                    }}
+                  >
+                    MOCK NFT · {crate.nameA} vs {crate.nameB}
+                  </div>
+                </div>
+              ))}
+
+              {!hasCrate && mockCrates.length === 0 && (
                 <div
                   style={{
                     padding: 24,
@@ -441,8 +761,8 @@ export default function Home() {
                     fontFamily: "var(--font-body)",
                   }}
                 >
-                  No Victory Crates yet. Join a real on-chain campaign to earn
-                  one.
+                  No Victory Crates yet. Stake pada campaign (on-chain atau
+                  mock) untuk mendapatkan crate.
                 </div>
               )}
             </div>
@@ -479,6 +799,75 @@ export default function Home() {
             </div>
             <div style={{ maxWidth: 800, margin: "0 auto" }}>
               <AdminPanel onSetFeatured={setFeaturedWarId} />
+            </div>
+
+            <div style={{ maxWidth: 800, margin: "24px auto 0" }}>
+              <div
+                className="card"
+                style={{ padding: 20, border: "1px solid rgba(255,215,0,0.2)" }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "1.1rem",
+                    letterSpacing: "0.08em",
+                    color: "var(--gold)",
+                    marginBottom: 12,
+                  }}
+                >
+                  MOCK CAMPAIGN CREATOR
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 8,
+                    marginBottom: 8,
+                  }}
+                >
+                  <input
+                    className="input-field"
+                    value={mockCreateNameA}
+                    onChange={(e) => setMockCreateNameA(e.target.value)}
+                    placeholder="Mock Side A"
+                  />
+                  <input
+                    className="input-field"
+                    value={mockCreateNameB}
+                    onChange={(e) => setMockCreateNameB(e.target.value)}
+                    placeholder="Mock Side B"
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  <input
+                    className="input-field"
+                    type="number"
+                    value={mockCreateDuration}
+                    onChange={(e) => setMockCreateDuration(e.target.value)}
+                    placeholder="Duration menit"
+                  />
+                  <input
+                    className="input-field"
+                    type="number"
+                    value={mockCreateYieldBps}
+                    onChange={(e) => setMockCreateYieldBps(e.target.value)}
+                    placeholder="Yield BPS"
+                  />
+                </div>
+                <button
+                  className="btn-battle"
+                  onClick={handleMockCreateCampaign}
+                >
+                  🚀 Create Mock Campaign (Toast Demo)
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
