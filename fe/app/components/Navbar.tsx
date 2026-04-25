@@ -4,7 +4,7 @@ import { useAccount, useConnect, useDisconnect, useReadContract } from "wagmi";
 import { ADDRESSES, MOCK_USDC_ABI, OWNER_ADDRESS } from "@/app/config/contracts";
 import { formatUnits } from "viem";
 import { motion } from "framer-motion";
-import { PackageOpen } from "lucide-react";
+import { PackageOpen, Droplets, ShieldAlert } from "lucide-react";
 import { injected } from "wagmi/connectors";
 import { isPrivyEnabled } from "./Providers";
 
@@ -67,11 +67,11 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
           padding: "8px 16px",
           width: "90%",
           maxWidth: 1100,
-          background: "rgba(36, 39, 58, 0.7)", // Matches Catppuccin surface
+          background: "rgba(255, 255, 255, 0.85)", // Light mode floating capsule
           backdropFilter: "blur(20px)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          border: "1px solid rgba(0,0,0,0.05)",
           borderRadius: 40, 
-          boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
         }}
       >
         {/* Left: Logo + nav */}
@@ -80,7 +80,7 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
             <img src="/logo.png" alt="Tarik Logo" style={{ height: 32, objectFit: "contain" }} />
           </div>
           <div style={{ display: "flex", gap: 4 }}>
-            {["Markets", "Leaderboard", "Lootboxes"].map((label) => {
+            {["Markets", "Leaderboard", "Lootboxes", ...(isOwner ? ["Admin"] : [])].map((label) => {
               const viewValue = label === "Markets" ? "grid" : label.toLowerCase();
               const isActive = activeView === viewValue;
               return (
@@ -96,7 +96,8 @@ export default function Navbar({ activeView, onViewChange }: { activeView?: stri
                     cursor: "pointer", transition: "all 0.2s",
                   }}
                 >
-                  {label === "Lootboxes" ? <><PackageOpen size={16} /> Lootboxes</> : label}
+                  {label === "Lootboxes" ? <><PackageOpen size={16} /> Lootboxes</> : 
+                   label === "Admin" ? <><ShieldAlert size={16} /> Admin Dashboard</> : label}
                 </button>
               );
             })}

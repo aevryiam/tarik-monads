@@ -16,7 +16,7 @@ import Leaderboard from "@/app/components/Leaderboard";
 import { ADDRESSES, TARIK_VAULT_ABI, VICTORY_CRATE_ABI } from "@/app/config/contracts";
 import { MOCK_CAMPAIGNS, type MockCampaign } from "@/app/config/mockData";
 
-type ViewMode = "grid" | "arena" | "lootboxes" | "leaderboard";
+type ViewMode = "grid" | "arena" | "lootboxes" | "leaderboard" | "admin";
 
 export default function Home() {
   const { address } = useAccount();
@@ -276,10 +276,7 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Admin panel */}
-            <div style={{ marginTop: 32 }}>
-              <AdminPanel onSetFeatured={setFeaturedWarId} />
-            </div>
+
           </motion.div>
         )}
 
@@ -449,6 +446,27 @@ export default function Home() {
         {/* Leaderboard View */}
         {view === "leaderboard" && (
           <Leaderboard />
+        )}
+
+        {/* Admin View */}
+        {view === "admin" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ padding: "40px 0" }}
+          >
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: "var(--gold)", letterSpacing: "0.1em" }}>
+                ADMIN DASHBOARD
+              </h2>
+              <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>
+                Manage campaigns, resolve wars, and control the yield flow.
+              </p>
+            </div>
+            <div style={{ maxWidth: 800, margin: "0 auto" }}>
+              <AdminPanel onSetFeatured={setFeaturedWarId} />
+            </div>
+          </motion.div>
         )}
 
         {/* Footer */}

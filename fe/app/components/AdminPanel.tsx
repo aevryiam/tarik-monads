@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { ShieldAlert, Rocket, Swords } from "lucide-react";
 import { ADDRESSES, TARIK_VAULT_ABI, OWNER_ADDRESS } from "@/app/config/contracts";
 
 export default function AdminPanel({ onSetFeatured }: { onSetFeatured?: (id: number) => void }) {
@@ -66,8 +67,8 @@ export default function AdminPanel({ onSetFeatured }: { onSetFeatured?: (id: num
   return (
     <div className="card" style={{ padding: 24, border: "1px solid rgba(255,215,0,0.2)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <span style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", letterSpacing: "0.12em", color: "var(--gold)" }}>
-          ⚡ ADMIN CONTROL
+        <span style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", letterSpacing: "0.12em", color: "var(--gold)", display: "flex", alignItems: "center", gap: 8 }}>
+          <ShieldAlert size={20} /> ADMIN CONTROL
         </span>
         {currentWarId !== undefined && (
           <span className="badge badge-active" style={{ background: "rgba(255,215,0,0.1)", color: "var(--gold)", borderColor: "rgba(255,215,0,0.3)" }}>
@@ -116,7 +117,7 @@ export default function AdminPanel({ onSetFeatured }: { onSetFeatured?: (id: num
             color: "#000",
           }}
         >
-          {isCreating ? "Creating…" : createConfirming ? "Confirming…" : createSuccess ? "✓ Campaign Created!" : "🚀 Launch Campaign"}
+          {isCreating ? "Creating…" : createConfirming ? "Confirming…" : createSuccess ? "✓ Campaign Created!" : <><Rocket size={14} style={{ display: "inline", marginRight: 6 }} /> Launch Campaign</>}
         </button>
       </div>
 
@@ -145,7 +146,7 @@ export default function AdminPanel({ onSetFeatured }: { onSetFeatured?: (id: num
             border: "1px solid var(--border-medium)",
           }}
         >
-          {isResolving ? "Resolving…" : resolveConfirming ? "Confirming…" : resolveSuccess ? "✓ Resolved!" : "⚔ Resolve Campaign"}
+          {isResolving ? "Resolving…" : resolveConfirming ? "Confirming…" : resolveSuccess ? "✓ Resolved!" : <><Swords size={14} style={{ display: "inline", marginRight: 6 }} /> Resolve Campaign</>}
         </button>
       </div>
     </div>

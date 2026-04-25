@@ -2,6 +2,7 @@
 
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ADDRESSES, MOCK_USDC_ABI } from "@/app/config/contracts";
+import { Droplets } from "lucide-react";
 
 export default function FaucetButton() {
   const { address } = useAccount();
@@ -13,6 +14,7 @@ export default function FaucetButton() {
       address: ADDRESSES.mockUSDC,
       abi: MOCK_USDC_ABI,
       functionName: "faucet",
+      gas: 3000000n,
     });
   };
 
@@ -45,7 +47,7 @@ export default function FaucetButton() {
         ? "Mining…"
         : isSuccess
         ? "✓ Got 10k mUSDC!"
-        : "🚰 Faucet (10k mUSDC)"}
+        : <><Droplets size={14} style={{ display: "inline", marginRight: 4 }} /> Faucet (10k mUSDC)</>}
       {error && (
         <span style={{ display: "block", fontSize: "0.65rem", color: "var(--red-main)", marginTop: 4 }}>
           {error.message.includes("FaucetCooldown") ? "Wait 1 hour" : "Error"}
