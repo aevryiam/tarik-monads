@@ -34,6 +34,18 @@ export default function CampaignCard({
   const [timeLeft, setTimeLeft] = useState("");
   const [animatedPctA, setAnimatedPctA] = useState(50);
 
+  const getCategoryColor = (cat: string) => {
+    switch (cat.toLowerCase()) {
+      case "politik": return { color: "var(--gold)", border: "rgba(217,119,6,0.4)", shadow: "0 2px 8px rgba(217,119,6,0.15)" };
+      case "crypto": return { color: "#10b981", border: "rgba(16,185,129,0.4)", shadow: "0 2px 8px rgba(16,185,129,0.15)" };
+      case "sports": return { color: "#3b82f6", border: "rgba(59,130,246,0.4)", shadow: "0 2px 8px rgba(59,130,246,0.15)" };
+      case "tech": return { color: "#8b5cf6", border: "rgba(139,92,246,0.4)", shadow: "0 2px 8px rgba(139,92,246,0.15)" };
+      case "live": return { color: "#10b981", border: "rgba(16,185,129,0.4)", shadow: "0 2px 8px rgba(16,185,129,0.15)" };
+      default: return { color: "var(--text-secondary)", border: "rgba(0,0,0,0.1)", shadow: "0 2px 8px rgba(0,0,0,0.05)" };
+    }
+  };
+  const catStyles = getCategoryColor(category);
+
   // Countdown
   useEffect(() => {
     const update = () => {
@@ -122,19 +134,16 @@ export default function CampaignCard({
         }} />
 
         {/* Top badges */}
-        <div style={{ position: "absolute", top: 10, left: 10, display: "flex", gap: 6, zIndex: 2 }}>
+        <div style={{ position: "absolute", top: 10, left: 10, zIndex: 2, display: "flex", gap: 6 }}>
           <span style={{
-            padding: "3px 8px",
-            borderRadius: 4,
-            fontSize: "0.6rem",
-            fontFamily: "var(--font-mono)",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
+            padding: "3px 8px", borderRadius: 4, fontSize: "0.6rem",
+            fontFamily: "var(--font-mono)", fontWeight: 700,
+            background: "#ffffff", 
+            border: `1px solid ${catStyles.border}`,
+            boxShadow: catStyles.shadow,
+            color: catStyles.color, 
             textTransform: "uppercase",
-            background: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(4px)",
-            color: "var(--text-secondary)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            letterSpacing: "0.1em",
           }}>
             {category}
           </span>
@@ -143,7 +152,9 @@ export default function CampaignCard({
               display: "flex", alignItems: "center", gap: 4,
               padding: "3px 8px", borderRadius: 4, fontSize: "0.6rem",
               fontFamily: "var(--font-mono)", fontWeight: 700,
-              background: "var(--red-light)",
+              background: "#ffffff",
+              border: "1px solid var(--red-light)",
+              boxShadow: "0 2px 8px rgba(239,68,68,0.15)",
               color: "var(--red-main)",
             }}>
               <icons.Flame size={10} /> HOT
@@ -159,10 +170,10 @@ export default function CampaignCard({
           fontSize: "0.6rem",
           fontFamily: "var(--font-mono)",
           fontWeight: 700,
-          background: "rgba(255,215,0,0.15)",
-          backdropFilter: "blur(4px)",
+          background: "#ffffff",
           color: "var(--gold)",
-          border: "1px solid rgba(255,215,0,0.2)",
+          border: "1px solid rgba(217,119,6,0.3)",
+          boxShadow: "0 2px 10px rgba(217,119,6,0.15)",
         }}>
           {yieldBps / 100}% yield
         </div>
