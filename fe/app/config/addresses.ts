@@ -22,7 +22,5 @@ export const ADDRESSES = {
  * Admin/owner address — digunakan di frontend untuk menampilkan
  * Admin Panel (bukan untuk keperluan signing/private key).
  */
-export const OWNER_ADDRESS = (
-  process.env.NEXT_PUBLIC_OWNER_ADDRESS ||
-  "0x8B35e6241D00Fa03C7b36e923b41590bb6B94478"
-) as `0x${string}`;
+export const OWNER_ADDRESS = (process.env.NEXT_PUBLIC_OWNER_ADDRESS ||
+  "0x8B35e6241D00Fa03C7b36e923b41590bb6B94478") as `0x${string}`;

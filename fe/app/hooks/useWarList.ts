@@ -3,9 +3,7 @@
 // ============================================================================
 "use client";
 
-import { useReadContract, useReadContracts } from "wagmi";
-import { ADDRESSES } from "@/app/config/addresses";
-import { TARIK_VAULT_ABI } from "@/app/contracts/abi/TarikVault.abi";
+import { useQuery } from "@tanstack/react-query";
 import { REFETCH_INTERVAL } from "@/app/config/constants";
 import { WarStatus } from "@/app/types/contracts";
 import type { War, WarWithId } from "@/app/types/contracts";
@@ -21,51 +19,78 @@ interface UseWarListResult {
   refetch: () => void;
 }
 
+interface ApiWarRow {
+  id: number;
+  nameA: string;
+  nameB: string;
+  startTime: number;
+  endTime: number;
+  tvlA: string;
+  tvlB: string;
+  totalDeposits: string;
+  mockYieldBps: number;
+  totalYield: string;
+  winningSide: number;
+  status: number;
+  participantCount: number;
+}
+
+interface ApiWarsResponse {
+  wars: ApiWarRow[];
+  total: number;
+}
+
+function mapApiWarToWarWithId(row: ApiWarRow): WarWithId {
+  const war: War = {
+    nameA: row.nameA,
+    nameB: row.nameB,
+    startTime: BigInt(row.startTime),
+    endTime: BigInt(row.endTime),
+    tvlA: BigInt(row.tvlA),
+    tvlB: BigInt(row.tvlB),
+    totalDeposits: BigInt(row.totalDeposits),
+    mockYieldBps: BigInt(row.mockYieldBps),
+    totalYield: BigInt(row.totalYield),
+    winningSide: row.winningSide,
+    status: row.status as WarStatus,
+    participantCount: BigInt(row.participantCount),
+  };
+
+  return {
+    ...war,
+    warId: row.id,
+  };
+}
+
 /**
- * Membaca total war count, lalu batch-read semua war data dalam satu multicall.
+ * Membaca daftar war melalui backend API.
+ * Endpoint server membaca on-chain data sehingga UI tetap stabil
+ * walau provider/client RPC di browser bermasalah.
  */
 export function useWarList(): UseWarListResult {
-  // Step 1: ambil jumlah wars
-  const { data: currentWarId, isLoading: countLoading, refetch } = useReadContract({
-    address: ADDRESSES.tarikVault,
-    abi: TARIK_VAULT_ABI,
-    functionName: "currentWarId",
-    query: { refetchInterval: REFETCH_INTERVAL.normal },
-  });
-
-  const warCount = currentWarId !== undefined ? Number(currentWarId) : 0;
-
-  // Step 2: batch-read semua wars dalam satu call
-  const { data: warsData, isLoading: warsLoading } = useReadContracts({
-    contracts: Array.from({ length: warCount }, (_, i) => ({
-      address: ADDRESSES.tarikVault,
-      abi: TARIK_VAULT_ABI,
-      functionName: "getWar" as const,
-      args: [BigInt(i)] as const,
-    })),
-    query: {
-      enabled: warCount > 0,
-      refetchInterval: REFETCH_INTERVAL.normal,
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["wars", "api"],
+    queryFn: async (): Promise<ApiWarsResponse> => {
+      const res = await fetch("/api/wars", { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch wars from API: ${res.status}`);
+      }
+      return (await res.json()) as ApiWarsResponse;
+    },
+    refetchInterval: REFETCH_INTERVAL.normal,
+    placeholderData: {
+      wars: [],
+      total: 0,
     },
   });
 
-  const wars: WarWithId[] = (warsData ?? [])
-    .map((item, i) => {
-      const war = item.result as War | undefined;
-      if (!war) return null;
-      return { ...war, warId: i };
-    })
-    .filter((w): w is WarWithId => w !== null);
+  const wars: WarWithId[] = (data?.wars ?? []).map(mapApiWarToWarWithId);
+  const warCount = data?.total ?? 0;
 
-  /**
-   * Tampilkan semua campaign Active. Campaign yang endTime-nya sudah lewat
-   * tetap perlu muncul agar owner bisa resolve dan user paham campaign-nya
-   * belum hilang, hanya menunggu settlement.
-   */
   const activeWars = wars.filter((w) => w.status === WarStatus.Active);
 
   const resolvedWars = wars.filter(
-    (w) => w.status === WarStatus.Resolved || w.status === WarStatus.Cancelled
+    (w) => w.status === WarStatus.Resolved || w.status === WarStatus.Cancelled,
   );
 
   return {
@@ -73,7 +98,9 @@ export function useWarList(): UseWarListResult {
     wars,
     activeWars,
     resolvedWars,
-    isLoading: countLoading || warsLoading,
-    refetch,
+    isLoading,
+    refetch: () => {
+      void refetch();
+    },
   };
 }
